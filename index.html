@@ -715,6 +715,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
     .kb-card .kb-txt{font-size:14px}
     .kb-card-del{width:36px;height:36px;font-size:22px;opacity:.7}
     .kb-input{font-size:16px;padding:12px;border-radius:10px}
+    /* Inbox move menu */
+    .inbox-move-menu{position:fixed;bottom:0;left:0;right:0;z-index:3200;background:var(--surface);border-radius:20px 20px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.25);padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom));animation:modSlideUp .2s cubic-bezier(.32,.72,0,1)}
+    .inbox-move-menu .imm-title{font-size:13px;font-weight:800;color:var(--text-m);text-transform:uppercase;margin-bottom:12px;text-align:center}
+    .inbox-move-menu .imm-opt{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;border:1px solid var(--border-light);background:var(--surface2);margin-bottom:8px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+    .inbox-move-menu .imm-opt:active{background:var(--accent-soft);border-color:var(--accent)}
+    .inbox-move-menu .imm-icon{font-size:20px}
+    .inbox-move-menu .imm-label{font-size:15px;font-weight:700;color:var(--text)}
+    .inbox-move-menu .imm-cancel{display:block;width:100%;padding:14px;border-radius:12px;border:none;background:var(--bg);color:var(--text-m);font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;font-family:var(--font)}
 
     /* --- Clarify --- */
     .clarify-ov{align-items:flex-end}
@@ -986,6 +994,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
     <input id="mIdeaIn" placeholder="Scrivi la tua idea..." style="width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:16px;font-family:var(--font);margin-bottom:10px" onkeydown="mIdeaKey(event)">
     <div id="mIdeaList" style="display:flex;flex-direction:column;gap:6px;max-height:40vh;overflow-y:auto"></div>
 </div>
+
+<!-- INBOX MOVE MENU (mobile) -->
+<div class="m-more-bg" id="immBg" onclick="closeInboxMoveMenu()" style="display:none"></div>
+<div class="inbox-move-menu" id="immMenu" style="display:none"></div>
 
 <!-- SEARCH OVERLAY -->
 <div class="search-ov" id="searchOv" onclick="if(event.target===this)closeSearch()">
@@ -1966,16 +1978,13 @@ function renderKBInbox(){
         d.addEventListener('dragstart',e=>{kbDrag={type:'inbox',id:item.id};d.classList.add('dragging')});
         d.addEventListener('dragend',()=>d.classList.remove('dragging'));
         d.addEventListener('dblclick',e=>{e.stopPropagation();editInboxItem(item.id)});
-        // Long-press to move to backlog (mobile)
+        // Long-press to show move options (mobile)
         let lpTimer=null;
         d.addEventListener('touchstart',function(e){
             lpTimer=setTimeout(function(){
                 lpTimer=null;
-                d.style.transition='transform .2s,opacity .2s';d.style.transform='scale(.9)';d.style.opacity='.5';
-                setTimeout(function(){
-                    inboxToBacklog(item.id);
-                    d.style.transform='';d.style.opacity='';d.style.transition='';
-                },200);
+                d.style.transform='scale(.95)';d.style.boxShadow='0 0 0 2px var(--accent)';
+                showInboxMoveMenu(item.id,d);
             },600);
         },{passive:true});
         d.addEventListener('touchmove',function(){if(lpTimer){clearTimeout(lpTimer);lpTimer=null}},{passive:true});
@@ -2375,6 +2384,27 @@ function inboxToBacklog(id){
     $('clarifyText').textContent='"'+item.text+'"';
     $('clarifyS1').style.display='block';$('clarifyS2').style.display='none';
     $('clarifyOv').classList.add('on');
+}
+function inboxToSomeday(id){
+    const items=loadInbox();const item=items.find(x=>x.id===id);if(!item)return;
+    const sd=loadSomeday();sd.unshift({id:item.id,text:item.text,cat:'personale',ts:item.ts});saveSomeday(sd);
+    saveInbox(items.filter(x=>x.id!==id));renderBV();
+}
+function showInboxMoveMenu(id,cardEl){
+    const items=loadInbox();const item=items.find(x=>x.id===id);if(!item)return;
+    const bg=$('immBg');const menu=$('immMenu');
+    menu.innerHTML=`
+        <div class="imm-title">${esc(item.text)}</div>
+        <div class="imm-opt" onclick="closeInboxMoveMenu();inboxToBacklog(${id})"><span class="imm-icon">📋</span><span class="imm-label">Backlog</span></div>
+        <div class="imm-opt" onclick="closeInboxMoveMenu();inboxToSomeday(${id})"><span class="imm-icon">💤</span><span class="imm-label">Prima o poi</span></div>
+        <div class="imm-opt" onclick="closeInboxMoveMenu();kbDelInbox(${id})"><span class="imm-icon">🗑</span><span class="imm-label">Elimina</span></div>
+        <button class="imm-cancel" onclick="closeInboxMoveMenu()">Annulla</button>
+    `;
+    bg.style.display='block';menu.style.display='block';
+}
+function closeInboxMoveMenu(){
+    $('immBg').style.display='none';$('immMenu').style.display='none';
+    document.querySelectorAll('.kb-card').forEach(c=>{c.style.transform='';c.style.boxShadow=''});
 }
 function kbDelInbox(id){saveInbox(loadInbox().filter(x=>x.id!==id));renderBV()}
 function kbDelBacklog(id){evs=evs.filter(x=>x.id!==id);save();renderBV();render()}

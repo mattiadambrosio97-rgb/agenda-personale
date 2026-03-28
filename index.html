@@ -661,10 +661,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
     .day-panel{width:100%!important;border-left:none;border-top:1px solid var(--border);overflow:hidden;-webkit-overflow-scrolling:touch}
     .day-panel .dp-section{display:none}
     .day-panel.dp-open .dp-section{display:block}
-    .day-panel .dp-toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-    .day-panel .dp-toggle-label{font-size:12px;font-weight:800;color:var(--text-m);text-transform:uppercase;letter-spacing:.5px}
-    .day-panel .dp-toggle-arrow{font-size:14px;color:var(--text-m);transition:transform .2s}
+    .day-panel .dp-toggle{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;background:var(--orange);border-radius:8px;margin:6px 10px}
+    .day-panel .dp-toggle-label{font-size:12px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.5px}
+    .day-panel .dp-toggle-arrow{font-size:14px;color:#fff;transition:transform .2s}
     .day-panel.dp-open .dp-toggle-arrow{transform:rotate(180deg)}
+    /* Prevent iOS zoom on input focus */
+    input,select,textarea{font-size:16px!important}
 
     /* --- Month grid --- */
     .mv{padding:4px 6px;overflow-y:auto;-webkit-overflow-scrolling:touch}

@@ -2858,7 +2858,10 @@ function initTouch(){
 
 // Pull-to-refresh for PWA (no F5 on iOS standalone)
 function initPullRefresh(){
-    if(!('ontouchstart' in window)||!navigator.standalone&&!window.matchMedia('(display-mode:standalone)').matches)return;
+    const isPwa=navigator.standalone||window.matchMedia('(display-mode:standalone)').matches;
+    const fab=document.getElementById('refreshFab');
+    if(fab&&isPwa)fab.classList.add('pwa-active');
+    if(!('ontouchstart' in window)||!isPwa)return;
     const ind=document.createElement('div');
     ind.className='ptr-indicator';ind.textContent='\u21bb';
     document.body.appendChild(ind);

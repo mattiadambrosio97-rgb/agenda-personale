@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -39,7 +39,7 @@
 --shadow-s:0 1px 2px rgba(0,0,0,.5);--shadow-m:0 4px 12px rgba(0,0,0,.6);--shadow-l:0 12px 32px rgba(0,0,0,.7);
 --modal-bg:rgba(0,0,0,.8);
 }
-body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased;padding-top:env(safe-area-inset-top);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
 
 /* HEADER */
 .hdr{display:flex;align-items:center;gap:10px;padding:6px 20px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
@@ -579,138 +579,241 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 /* LASSO SELECT */
 .lasso-rect{position:fixed;border:1.5px solid var(--accent);background:rgba(240,101,67,.08);z-index:50;pointer-events:none;border-radius:2px}
 
+/* ===== GLOBAL TOUCH FEEDBACK ===== */
+@media(hover:none)and(pointer:coarse){
+    *{-webkit-tap-highlight-color:transparent}
+    .ib:active,.ab:active,.nav-vb:active,.nav-tb:active,.btn:active,
+    .focus-dot:active,.ev-chk:active,.ev-del:active,.triage-btn:active,
+    .clarify-opt:active,.backup-btn:active,.dp-filt:active,.dp-emerg-btn:active,
+    .bulk-btn:active,.focus-btn:active,.sub-add:active,.sub-chk:active,
+    .bv-tab:active,.bv-close:active,.review-close:active,.focus-close:active,
+    .pin-btn:active,.kb-card-del:active,.sb-ab:active,.sb-exp:active,
+    .pv-row:active,.dp-task:active,.sr-item:active,.triage-full:active{
+        transform:scale(.94);opacity:.8;transition:transform .06s,opacity .06s
+    }
+    .ev:active,.bl:active,.kb-card:active{transform:scale(.97);transition:transform .06s}
+    /* Always show action buttons on touch */
+    .ev-btns{opacity:1!important}
+    .kb-card-del{opacity:.7!important}
+    .sub-del{opacity:1!important}
+    .dp-task-bl{opacity:.6!important}
+}
+
 /* ===== MOBILE RESPONSIVE ===== */
 @media(max-width:768px){
-    /* Header: compact, wrap */
-    .hdr{padding:4px 8px;gap:4px;flex-wrap:wrap;justify-content:center}
-    .hdr-brand{font-size:14px;display:none}
-    .hdr-nav{gap:4px;flex-wrap:wrap;justify-content:center}
+    /* --- iOS Safe Areas --- */
+    .hdr{padding-top:calc(4px + env(safe-area-inset-top));padding-left:calc(8px + env(safe-area-inset-left));padding-right:calc(8px + env(safe-area-inset-right))}
+    .bulk-bar{padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+    .sb{padding-bottom:env(safe-area-inset-bottom)}
+    .bv-body{padding-bottom:calc(8px + env(safe-area-inset-bottom))!important}
+    .focus-ov{padding-bottom:env(safe-area-inset-bottom)}
+
+    /* --- Header: 2-row compact mobile layout --- */
+    .hdr{padding:4px 8px;gap:3px;flex-wrap:wrap;justify-content:center;position:sticky;top:0;z-index:50}
+    .hdr-brand{display:none}
+    .hdr-nav{gap:3px;flex-wrap:wrap;justify-content:center;width:100%}
     .hdr-sep{display:none}
-    .nav-range{min-width:120px;font-size:11px}
-    /* Touch targets min 44px */
-    .ib{width:44px;height:44px;border-radius:8px;font-size:16px}
-    .ab{height:44px;padding:0 12px;font-size:13px}
-    .nav-vb{padding:8px 12px;font-size:12px}
-    .nav-tb{padding:8px 14px;font-size:12px}
-    .thm{width:48px;height:28px;border-radius:14px}
+    .nav-range{min-width:100px;font-size:11px;font-weight:800;order:-1}
+
+    /* --- Touch targets: 44px minimum (Apple HIG) --- */
+    .ib{width:44px;height:44px;border-radius:10px;font-size:16px}
+    .ab{height:44px;padding:0 14px;font-size:13px;border-radius:10px}
+    .nav-vb{padding:8px 12px;font-size:12px;border-radius:8px;min-height:36px}
+    .nav-tb{padding:8px 14px;font-size:12px;border-radius:8px;min-height:36px}
+    .thm{width:50px;height:28px;border-radius:14px}
     .thm::after{width:22px;height:22px;top:3px;left:3px}
-    .dark .thm::after{transform:translateX(20px)}
-    .focus-dot{width:44px;height:44px;border-radius:8px}
+    .dark .thm::after{transform:translateX(22px)}
+    .focus-dot{width:44px;height:44px;border-radius:10px}
     .focus-dot-inner{width:10px;height:10px}
-    /* Main layout: stack */
+
+    /* --- Main layout --- */
     .main{flex-direction:column}
-    /* Grid: single column even in week */
-    .gv{min-height:60vh}
-    /* Sidebar: overlay bottom */
-    .sb{position:fixed;bottom:0;left:0;right:0;width:100%!important;height:50vh;z-index:100;border-left:none;border-top:2px solid var(--border);border-radius:16px 16px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.15);transition:transform .25s ease}
-    .sb.shut{width:100%!important;height:0;transform:translateY(100%);border:none}
-    .sb-tog{position:fixed;bottom:0;left:50%;transform:translateX(-50%);right:auto;top:auto;width:60px;height:28px;border-radius:14px 14px 0 0;border-bottom:none;z-index:101;font-size:9px}
+    .gv{min-height:55vh}
+
+    /* --- Sidebar: bottom sheet with drag handle --- */
+    .sb{position:fixed;bottom:0;left:0;right:0;width:100%!important;height:55vh;z-index:100;border-left:none;border-top:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.18);transition:transform .3s cubic-bezier(.32,.72,0,1);will-change:transform;padding-bottom:env(safe-area-inset-bottom)}
+    .sb::before{content:'';display:block;width:36px;height:5px;background:var(--border);border-radius:3px;margin:10px auto 6px;flex-shrink:0}
+    .sb.shut{width:100%!important;height:55vh;transform:translateY(100%);border:none}
+    .sb-tog{position:fixed;bottom:0;left:50%;transform:translateX(-50%);right:auto;top:auto;width:64px;height:30px;border-radius:14px 14px 0 0;border-bottom:none;z-index:101;font-size:10px}
     .sb.shut~.sb-tog{bottom:0}
     .sb-tog .arr{transform:rotate(-90deg)}
     .sb.shut~.sb-tog .arr{transform:rotate(90deg)}
-    /* Day panel: full width below grid */
-    .day-panel{width:100%!important;border-left:none;border-top:1px solid var(--border);max-height:50vh;overflow-y:auto}
-    /* Month grid: more compact */
+
+    /* --- Day panel --- */
+    .day-panel{width:100%!important;border-left:none;border-top:1px solid var(--border);max-height:45vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+    /* --- Month grid --- */
     .mv{padding:4px 6px}
-    .mg-h{font-size:8px;padding:2px}
+    .mg-h{font-size:8px;padding:3px}
     .mg-dn{font-size:10px}
-    .mg-ev{font-size:7px;padding:1px 2px}
-    .mg-wl-badge{font-size:8px;padding:1px 3px}
-    /* Event cards: bigger touch area */
-    .ev{min-height:44px;padding:4px 8px}
-    .ev-n{font-size:12px}
-    .ev-btns{opacity:1}
-    .ev-chk,.ev-del{width:32px;height:32px;font-size:20px}
-    /* Backlog cards */
-    .bl{padding:10px 12px;min-height:44px}
-    .bl-n{font-size:12px}
-    /* Modal: full screen */
-    .mod{width:95vw;max-width:none;padding:16px;border-radius:12px;max-height:95vh}
-    .mod-t{font-size:15px;margin-bottom:12px}
-    .fi,.fs,.fta{font-size:16px;padding:10px 12px}
-    .btn{padding:10px 16px;font-size:13px}
-    .st-opt{padding:8px 4px;font-size:11px}
-    /* Board kanban: stack columns */
-    .bv-body{flex-direction:column!important;overflow-y:auto!important;padding:8px!important;gap:8px!important}
-    .bv-top{padding:8px 12px;gap:6px;flex-wrap:wrap}
-    .bv-tabs{margin-left:0;flex-wrap:wrap}
-    .bv-tab{padding:8px 12px}
-    .bv-close{width:44px;height:44px;font-size:20px}
-    .kb-col{min-height:auto;max-height:40vh}
-    .kb-card{padding:12px 14px;min-height:44px}
+    .mg-ev{font-size:7px;padding:1px 3px}
+    .mg-wl-badge{font-size:8px;padding:1px 4px}
+    .mg-c{min-height:48px}
+
+    /* --- Event cards --- */
+    .ev{min-height:44px;padding:5px 8px;border-radius:6px;touch-action:manipulation}
+    .ev-n{font-size:12px;-webkit-line-clamp:2}
+    .ev-btns{opacity:1;gap:4px}
+    .ev-chk,.ev-del{width:34px;height:34px;font-size:20px;border-radius:8px}
+
+    /* --- Backlog cards --- */
+    .bl{padding:10px 12px;min-height:48px;border-radius:6px;touch-action:manipulation}
+    .bl-n{font-size:13px}
+
+    /* --- Modal: slide-up fullscreen --- */
+    .mod-bg{align-items:flex-end}
+    .mod{width:100vw;max-width:none;padding:20px 16px;padding-bottom:calc(20px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0;max-height:92vh;animation:modSlideUp .3s cubic-bezier(.32,.72,0,1)}
+    @keyframes modSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:none}}
+    .mod-t{font-size:17px;margin-bottom:14px}
+    .fi,.fs,.fta{font-size:16px;padding:12px 14px;border-radius:10px}
+    .btn{padding:12px 18px;font-size:14px;border-radius:10px;min-height:44px}
+    .st-opt{padding:10px 4px;font-size:12px;min-height:44px}
+    .mod-a{flex-wrap:wrap;gap:8px}
+    .mod-r{gap:8px;flex-wrap:wrap}
+    .fr{flex-direction:column;gap:0}
+
+    /* --- Board kanban --- */
+    .bv-body{flex-direction:column!important;overflow-y:auto!important;padding:10px!important;gap:10px!important;-webkit-overflow-scrolling:touch}
+    .bv-top{padding:10px 12px;gap:6px;flex-wrap:wrap;padding-top:calc(10px + env(safe-area-inset-top))}
+    .bv-tabs{margin-left:0;flex-wrap:wrap;gap:4px}
+    .bv-tab{padding:10px 14px;border-radius:8px;min-height:40px}
+    .bv-close{width:44px;height:44px;font-size:20px;border-radius:10px}
+    .kb-col{min-height:auto;max-height:45vh;border-radius:14px}
+    .kb-card{padding:14px 14px;min-height:48px;border-radius:10px}
     .kb-card .kb-txt{font-size:14px}
-    .kb-card-del{width:36px;height:36px;font-size:24px;opacity:1}
-    .kb-input{font-size:16px;padding:12px}
-    /* Clarify */
-    .clarify-card{width:95vw;padding:16px;max-height:90vh;overflow-y:auto}
-    .clarify-opt{padding:14px 16px;font-size:14px;min-height:44px}
-    .co-info{width:44px;font-size:16px}
-    /* Search */
-    .search-ov{padding-top:4vh}
-    .search-box{width:96%}
-    .search-input{font-size:16px;padding:14px 16px}
-    .sr-item{padding:12px 16px}
-    /* Focus mode */
-    .focus-card{padding:20px;max-width:95vw}
-    .focus-title{font-size:22px}
-    .focus-btn{padding:12px 16px;font-size:14px;min-height:44px}
-    .focus-close{width:44px;height:44px}
-    /* Review */
-    .review-body{padding:12px}
-    .review-card{padding:14px 16px}
-    .review-card h3{font-size:14px}
-    .review-item{padding:10px 12px;font-size:12px;flex-wrap:wrap;gap:6px}
+    .kb-card-del{width:38px;height:38px;font-size:24px;opacity:.7}
+    .kb-input{font-size:16px;padding:14px;border-radius:10px}
+
+    /* --- Clarify --- */
+    .clarify-ov{align-items:flex-end}
+    .clarify-card{width:100vw;padding:20px 16px;padding-bottom:calc(20px + env(safe-area-inset-bottom));max-height:90vh;overflow-y:auto;border-radius:20px 20px 0 0;animation:modSlideUp .3s cubic-bezier(.32,.72,0,1)}
+    .clarify-opt{padding:14px 16px;font-size:15px;min-height:48px;border-radius:12px}
+    .co-info{width:48px;font-size:18px;border-radius:0 12px 12px 0}
+
+    /* --- Search --- */
+    .search-ov{padding-top:0;align-items:flex-start}
+    .search-box{width:100%;border-radius:0 0 16px 16px;border-top:none;max-height:100vh;max-height:100dvh}
+    .search-input{font-size:17px;padding:16px 18px}
+    .sr-item{padding:14px 18px;min-height:48px}
+    .sr-title{font-size:15px}
+    .search-hint{padding:12px 18px;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+
+    /* --- Focus mode --- */
+    .focus-ov{padding:20px 16px}
+    .focus-top{padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top))}
+    .focus-card{padding:24px 20px;max-width:100%;border-radius:16px}
+    .focus-title{font-size:24px}
+    .focus-time{font-size:15px}
+    .focus-note{font-size:15px;padding:14px}
+    .focus-btn{padding:14px 18px;font-size:15px;min-height:48px;border-radius:12px;flex:1}
+    .focus-close{width:44px;height:44px;border-radius:10px}
+    .focus-actions{flex-direction:column;gap:10px}
+    .focus-bar{width:100%}
+
+    /* --- Review --- */
+    .review-top{padding-top:calc(14px + env(safe-area-inset-top))}
+    .review-body{padding:14px}
+    .review-card{padding:16px;border-radius:14px}
+    .review-card h3{font-size:15px}
+    .review-item{padding:12px;font-size:13px;flex-wrap:wrap;gap:6px;border-radius:8px;min-height:44px}
     .review-item-actions{gap:6px}
-    .review-item-actions button{padding:6px 12px;font-size:11px;min-height:36px}
-    .review-close{width:44px;height:44px;font-size:20px}
-    /* GTD tips */
-    .gtd-tip-box{padding:18px 20px;max-width:95vw}
+    .review-item-actions button{padding:8px 14px;font-size:12px;min-height:40px;border-radius:6px}
+    .review-close{width:44px;height:44px;font-size:20px;border-radius:10px}
+    .review-nav{flex-direction:column;gap:8px}
+    .review-nav .btn{width:100%;text-align:center}
+
+    /* --- GTD tips --- */
+    .gtd-tip-ov{align-items:flex-end}
+    .gtd-tip-box{padding:20px;max-width:100%;width:100%;border-radius:20px 20px 0 0;animation:modSlideUp .3s cubic-bezier(.32,.72,0,1)}
     .gtd-info{font-size:14px;padding:4px 8px;min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
-    /* Triage */
-    .triage-pop{width:90vw;max-width:320px;left:50%!important;top:50%!important;transform:translate(-50%,-50%)}
-    .triage-btn{padding:12px 8px;font-size:13px;min-height:44px}
-    /* Quick inbox */
-    .qi-pop{width:90vw;max-width:320px;right:-40px}
-    /* Backup */
-    .backup-btn{padding:12px;font-size:14px;min-height:44px}
-    /* Day panel items */
-    .dp-task{min-height:44px;padding:10px 10px}
-    .dp-task-name{font-size:13px}
-    .dp-filt{padding:8px 12px;font-size:12px;min-height:36px}
-    .dp-emerg-btn{padding:10px 16px;font-size:13px;min-height:44px}
-    .dp-q2-item{min-height:36px;font-size:14px}
-    .dp-sub-chk{width:28px;height:28px;border-radius:6px;font-size:14px}
-    /* Bulk bar */
-    .bulk-bar{bottom:8px;padding:8px 12px;gap:8px;flex-wrap:wrap;width:95vw;left:2.5vw;transform:none;justify-content:center}
-    .bulk-btn{padding:8px 12px;min-height:40px}
-    /* Overdue */
+
+    /* --- Triage --- */
+    .triage-pop{width:92vw;max-width:340px;left:50%!important;top:auto!important;bottom:20px!important;transform:translateX(-50%);border-radius:16px;padding:18px 20px}
+    .triage-btn{padding:14px 8px;font-size:14px;min-height:48px;border-radius:10px}
+    .triage-name{font-size:16px}
+
+    /* --- Quick inbox --- */
+    .qi-pop{width:calc(100vw - 16px);max-width:360px;right:-8px;border-radius:14px;padding:14px}
+    .qi-pop input{font-size:16px;padding:12px 14px;border-radius:10px}
+
+    /* --- Backup --- */
+    .backup-btn{padding:14px;font-size:15px;min-height:48px;border-radius:10px}
+
+    /* --- Day panel items --- */
+    .dp-task{min-height:48px;padding:12px;border-radius:8px;border-left-width:4px}
+    .dp-task-name{font-size:14px}
+    .dp-task-time{font-size:11px;font-weight:800}
+    .dp-filt{padding:10px 14px;font-size:13px;min-height:40px;border-radius:20px}
+    .dp-emerg-btn{padding:12px 18px;font-size:14px;min-height:48px;border-radius:10px}
+    .dp-q2-item{min-height:40px;font-size:14px}
+    .dp-sub-chk{width:30px;height:30px;border-radius:7px;font-size:14px}
+    .dp-section{border-radius:14px;padding:14px 16px}
+
+    /* --- Bulk bar --- */
+    .bulk-bar{bottom:0;left:0;right:0;width:100%;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));gap:8px;flex-wrap:wrap;justify-content:center;border-radius:16px 16px 0 0;transform:none}
+    .bulk-btn{padding:10px 14px;min-height:44px;border-radius:10px;font-size:13px}
+
+    /* --- Overdue --- */
     .ev.overdue::after{width:18px;height:18px;font-size:11px;right:26px}
-    /* Day headers compact */
-    .dh{padding:2px 1px}
-    .dh-name{font-size:8px}
-    .dh-num{font-size:12px}
-    /* Time col narrower */
-    :root{--tcol:40px}
+
+    /* --- Day headers --- */
+    .dh{padding:3px 1px}
+    .dh-name{font-size:8px;letter-spacing:.3px}
+    .dh-num{font-size:13px}
+
+    /* --- Time col --- */
+    :root{--tcol:38px;--slot:44px}
     .tl{font-size:9px;padding-right:4px}
-    /* Subtask */
-    .sub-row{padding:8px}
-    .sub-chk{width:28px;height:28px}
-    .sub-txt{font-size:14px}
-    .sub-del{width:32px;height:32px;font-size:18px;opacity:1}
-    .sub-add{padding:10px;font-size:13px;min-height:44px}
-    /* Project view */
-    .pv-row{padding:10px 12px;min-height:44px}
+
+    /* --- Subtask --- */
+    .sub-row{padding:10px;border-radius:8px;min-height:44px}
+    .sub-chk{width:30px;height:30px;border-radius:7px}
+    .sub-txt{font-size:15px}
+    .sub-del{width:34px;height:34px;font-size:18px;opacity:1;border-radius:7px}
+    .sub-add{padding:12px;font-size:14px;min-height:48px;border-radius:8px}
+
+    /* --- Project view --- */
+    .pv-row{padding:12px;min-height:48px;border-radius:8px}
+    .pv-name{font-size:16px}
+    .pv-row-title{font-size:14px}
+
+    /* --- Scroll optimization --- */
+    .gs,.sb-l,.kb-body,.review-body,.search-results,.qi-list{-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+
+    /* --- PIN lock mobile --- */
+    .pin-lock{padding:20px;padding-top:calc(20px + env(safe-area-inset-top))}
+    .pin-lock h1{font-size:32px}
+    .pin-lock p{font-size:16px}
+    .pin-input{width:240px;padding:18px;font-size:28px;border-radius:14px;letter-spacing:12px}
+    .pin-btn{width:240px;padding:16px;font-size:17px;border-radius:12px;min-height:52px}
+    .pin-err{font-size:14px}
 }
 
-/* Small phones */
+/* ===== Small phones (iPhone SE, etc.) ===== */
 @media(max-width:400px){
+    .hdr{padding:3px 6px;gap:2px}
     .hdr-nav{gap:2px}
-    .ib{width:40px;height:40px}
+    .ib{width:40px;height:40px;font-size:14px}
     .nav-vb{padding:6px 8px;font-size:11px}
-    .nav-range{min-width:90px;font-size:10px}
-    .ab{padding:0 8px;font-size:12px}
+    .nav-range{min-width:80px;font-size:10px}
+    .ab{padding:0 10px;font-size:12px;height:40px}
     .kb-col{max-height:35vh}
-    .bv-tab{padding:6px 10px;font-size:11px}
+    .bv-tab{padding:8px 10px;font-size:11px}
+    .focus-title{font-size:20px}
+    .focus-btn{font-size:14px}
+    .mod{padding:16px 12px}
+    .pin-input{width:200px;font-size:24px;letter-spacing:8px}
+    .pin-btn{width:200px}
+}
+
+/* ===== Landscape phone ===== */
+@media(max-width:768px)and(orientation:landscape){
+    .sb{height:70vh}
+    .focus-ov{padding:10px 16px;flex-direction:row;gap:20px}
+    .focus-card{max-width:60%}
+    .focus-actions{flex-direction:row}
+    .mod{max-height:95vh}
+    .gv{min-height:auto}
 }
 
 /* PIN LOCK */
@@ -2589,28 +2692,77 @@ function initLasso(){
 // TOUCH SUPPORT for mobile drag
 function initTouch(){
     if(!('ontouchstart' in window))return;
-    // Prevent iOS overscroll/bounce
     document.body.style.overscrollBehavior='none';
-    // Touch drag for event cards and backlog cards
+    document.body.style.webkitOverflowScrolling='touch';
+    const SWIPE_THRESHOLD=80;
     document.addEventListener('touchstart',function(e){
         const card=e.target.closest('.ev:not(.ghost):not(.snap-preview)');
         const blCard=e.target.closest('.bl');
-        if(!card&&!blCard)return;
-        if(e.target.closest('.ev-chk')||e.target.closest('.ev-del')||e.target.closest('.rz'))return;
-        const target=card||blCard;
+        const dpTask=e.target.closest('.dp-task');
+        const kbCard=e.target.closest('.kb-card');
+        if(!card&&!blCard&&!dpTask&&!kbCard)return;
+        if(e.target.closest('.ev-chk')||e.target.closest('.ev-del')||e.target.closest('.rz')||e.target.closest('.kb-card-del')||e.target.closest('.dp-task-bl'))return;
+        const target=card||blCard||dpTask||kbCard;
         const id=target.dataset.id;if(!id)return;
         const touch=e.touches[0];
-        let moved=false,startX=touch.clientX,startY=touch.clientY;
+        let moved=false,swiping=false,startX=touch.clientX,startY=touch.clientY,dx=0;
+        const origTransform=target.style.transform||'';
+        const origTransition=target.style.transition||'';
         const onMove=function(e2){
             const t=e2.touches[0];
-            if(!moved&&Math.abs(t.clientX-startX)<10&&Math.abs(t.clientY-startY)<10)return;
-            if(!moved){moved=true;e2.preventDefault()}else{e2.preventDefault()}
+            dx=t.clientX-startX;
+            const dy=Math.abs(t.clientY-startY);
+            if(!moved&&Math.abs(dx)<10&&dy<10)return;
+            if(!moved){
+                moved=true;
+                // If horizontal > vertical, it's a swipe
+                if(Math.abs(dx)>dy){swiping=true;e2.preventDefault()}
+            }
+            if(swiping){
+                e2.preventDefault();
+                // Only allow right swipe (positive dx) for "done"
+                const clamped=Math.max(0,Math.min(dx,SWIPE_THRESHOLD*1.5));
+                target.style.transition='none';
+                target.style.transform='translateX('+clamped+'px)';
+                target.style.opacity=String(1-clamped/(SWIPE_THRESHOLD*2.5));
+                // Visual hint
+                if(clamped>SWIPE_THRESHOLD*0.6){
+                    target.style.background='var(--green-bg)';
+                    target.style.borderColor='var(--green)';
+                }
+            } else if(moved){e2.preventDefault()}
         };
-        const onEnd=function(e2){
+        const onEnd=function(){
             document.removeEventListener('touchmove',onMove,{passive:false});
             document.removeEventListener('touchend',onEnd);
+            document.removeEventListener('touchcancel',onEnd);
+            if(swiping&&dx>=SWIPE_THRESHOLD){
+                // Swipe completed — mark done
+                target.style.transition='transform .2s,opacity .2s';
+                target.style.transform='translateX(120%)';
+                target.style.opacity='0';
+                setTimeout(function(){
+                    target.style.transform=origTransform;
+                    target.style.opacity='';
+                    target.style.transition=origTransition;
+                    target.style.background='';
+                    target.style.borderColor='';
+                    toggleDone(id);
+                },200);
+                return;
+            }
+            // Snap back
+            if(swiping){
+                target.style.transition='transform .25s cubic-bezier(.32,.72,0,1),opacity .25s,background .2s,border-color .2s';
+                target.style.transform=origTransform;
+                target.style.opacity='';
+                target.style.background='';
+                target.style.borderColor='';
+                setTimeout(function(){target.style.transition=origTransition},260);
+                return;
+            }
             if(!moved){
-                // It was a tap — open modal
+                // Tap — open modal or triage
                 const ev=evs.find(x=>x.id===id);
                 if(ev){
                     const st=ev.status||'todo';
@@ -2618,13 +2770,14 @@ function initTouch(){
                     const nowT=new Date();const nowTime=String(nowT.getHours()).padStart(2,'0')+':'+String(nowT.getMinutes()).padStart(2,'0');
                     const evEnd=ev.startTime?s2t(t2s(ev.startTime)+Math.max(1,Math.round((ev.duration||30)/SM))):'';
                     const isOverdue=st!=='done'&&ev.date&&ev.startTime&&(ev.date<today||(ev.date===today&&evEnd<=nowTime));
-                    if(isOverdue){showTriage(id,{clientX:touch.clientX,clientY:touch.clientY})}
+                    if(isOverdue){showTriage(id,{clientX:startX,clientY:startY})}
                     else{openMod(id)}
                 }
             }
         };
         document.addEventListener('touchmove',onMove,{passive:false});
         document.addEventListener('touchend',onEnd);
+        document.addEventListener('touchcancel',onEnd);
     },{passive:true});
 }
 
@@ -2692,13 +2845,13 @@ if(sessionStorage.getItem(PIN_SESSION)==='1'){
 // ===== FIREBASE CONFIG =====
 // TODO: Replace with your Firebase project config after setup
 const FIREBASE_CONFIG = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "YOUR_PROJECT",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "000000000000",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyAY9_Vj4qmoYtH335dKncpMIb9LSJwYMeg",
+    authDomain: "agenda-f3298.firebaseapp.com",
+    databaseURL: "https://agenda-f3298-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "agenda-f3298",
+    storageBucket: "agenda-f3298.firebasestorage.app",
+    messagingSenderId: "1064348670898",
+    appId: "1:1064348670898:web:3c522b8d9db04dd348a2ab"
 };
 
 // Only activate if configured

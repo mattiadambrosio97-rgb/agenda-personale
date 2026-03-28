@@ -690,7 +690,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 
     /* --- Modal: slide-up fullscreen --- */
     .mod-bg{align-items:flex-end}
-    .mod{width:100vw;max-width:none;padding:20px 16px;padding-bottom:calc(20px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0;max-height:92vh;animation:modSlideUp .3s cubic-bezier(.32,.72,0,1)}
+    .mod{width:100vw;max-width:none;padding:20px 16px;padding-bottom:calc(20px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:modSlideUp .3s cubic-bezier(.32,.72,0,1)}
     @keyframes modSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:none}}
     .mod-t{font-size:17px;margin-bottom:14px}
     .fi,.fs,.fta{font-size:16px;padding:12px 14px;border-radius:10px}
@@ -701,18 +701,20 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
     .fr{flex-direction:column;gap:0}
 
     /* --- Board kanban --- */
-    .bv{overflow:auto;-webkit-overflow-scrolling:touch}
-    .bv-body{flex-direction:column!important;overflow-y:visible!important;overflow:visible!important;padding:10px!important;gap:12px!important;flex:none!important}
-    .bv-top{padding:10px 12px;gap:6px;flex-wrap:nowrap;padding-top:calc(10px + env(safe-area-inset-top));overflow-x:auto;-webkit-overflow-scrolling:touch}
-    .bv-tabs{margin-left:0;flex-wrap:nowrap;gap:4px;flex-shrink:0}
-    .bv-tab{padding:8px 12px;border-radius:8px;min-height:40px;white-space:nowrap}
-    .bv-close{width:44px;height:44px;font-size:20px;border-radius:10px;flex-shrink:0}
-    .kb-col{min-height:auto;max-height:none;border-radius:14px}
-    .kb-body{max-height:none;overflow:visible}
-    .kb-card{padding:14px 14px;min-height:48px;border-radius:10px}
+    .bv{overflow-y:auto!important;-webkit-overflow-scrolling:touch}
+    .bv-top{padding:8px 12px;gap:6px;flex-wrap:nowrap;padding-top:calc(8px + env(safe-area-inset-top));padding-right:calc(12px + env(safe-area-inset-right));overflow:visible;position:sticky;top:0;z-index:10;background:var(--surface)}
+    .bv-title{font-size:15px;flex-shrink:0}
+    .bv-tabs{margin-left:0;flex-wrap:nowrap;gap:3px;flex-shrink:1;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .bv-tab{padding:7px 10px;border-radius:8px;min-height:36px;white-space:nowrap;font-size:11px}
+    .bv-close{width:40px;height:40px;font-size:18px;border-radius:10px;flex-shrink:0;margin-left:auto}
+    .bv-body{flex-direction:column!important;overflow:visible!important;padding:10px!important;gap:12px!important;flex:none!important}
+    .kb-col{min-height:auto;max-height:none;border-radius:14px;overflow:visible}
+    .kb-body{max-height:none;overflow:visible;min-height:40px}
+    .kb-empty{font-size:13px;padding:14px 10px;text-align:center}
+    .kb-card{padding:12px 14px;min-height:44px;border-radius:10px}
     .kb-card .kb-txt{font-size:14px}
-    .kb-card-del{width:38px;height:38px;font-size:24px;opacity:.7}
-    .kb-input{font-size:16px;padding:14px;border-radius:10px}
+    .kb-card-del{width:36px;height:36px;font-size:22px;opacity:.7}
+    .kb-input{font-size:16px;padding:12px;border-radius:10px}
 
     /* --- Clarify --- */
     .clarify-ov{align-items:flex-end}
@@ -974,6 +976,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
         <div class="mm-item" onclick="exportBackup();closeMobileMore()"><span class="mm-icon">📥</span><span class="mm-label">Backup</span></div>
         <div class="mm-item" onclick="$('importFile').click();closeMobileMore()"><span class="mm-icon">📤</span><span class="mm-label">Importa</span></div>
     </div>
+</div>
+
+<!-- MOBILE IDEA SHEET -->
+<div class="m-more-bg" id="mIdeaBg" onclick="closeMobileIdea()"></div>
+<div class="m-more-menu" id="mIdeaSheet">
+    <div class="mm-handle"></div>
+    <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:10px">Idea rapida</div>
+    <input id="mIdeaIn" placeholder="Scrivi la tua idea..." style="width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:16px;font-family:var(--font);margin-bottom:10px" onkeydown="mIdeaKey(event)">
+    <div id="mIdeaList" style="display:flex;flex-direction:column;gap:6px;max-height:40vh;overflow-y:auto"></div>
 </div>
 
 <!-- SEARCH OVERLAY -->
@@ -2371,9 +2382,35 @@ function kbDelSomeday(id){saveSomeday(loadSomeday().filter(x=>x.id!==id));render
 
 // Quick Inbox (header lightbulb)
 function togQI(){
+    if(window.innerWidth<=768){
+        openMobileIdea();return;
+    }
     const pop=$('qiPop');
     const on=pop.classList.toggle('on');
     if(on){renderQIList();setTimeout(()=>$('qiIn').focus(),50)}
+}
+function openMobileIdea(){
+    $('mIdeaBg').style.display='block';$('mIdeaSheet').classList.add('on');
+    renderMobileIdeaList();setTimeout(()=>$('mIdeaIn').focus(),100);
+}
+function closeMobileIdea(){
+    $('mIdeaBg').style.display='none';$('mIdeaSheet').classList.remove('on');
+}
+function mIdeaKey(e){
+    if(e.key==='Enter'&&$('mIdeaIn').value.trim()){
+        const items=loadInbox();
+        items.unshift({id:Date.now(),text:$('mIdeaIn').value.trim(),ts:new Date().toISOString()});
+        saveInbox(items);$('mIdeaIn').value='';renderMobileIdeaList();
+    }
+}
+function renderMobileIdeaList(){
+    const list=$('mIdeaList');const items=loadInbox();
+    if(!items.length){list.innerHTML='<div style="color:var(--text-m);font-size:13px;text-align:center;padding:16px">Nessuna idea. Scrivi sopra.</div>';return}
+    list.innerHTML=items.map(i=>`<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--border-light)">
+        <span style="flex:1;font-size:14px;color:var(--text)">${esc(i.text)}</span>
+        <button onclick="event.stopPropagation();inboxToBacklog(${i.id})" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text-m);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">Backlog</button>
+        <button onclick="event.stopPropagation();kbDelInbox(${i.id});renderMobileIdeaList()" style="width:32px;height:32px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text-m);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">&times;</button>
+    </div>`).join('');
 }
 function qiKey(e){
     if(e.key==='Enter'&&$('qiIn').value.trim()){
@@ -2507,7 +2544,9 @@ function openMod(id,bl,date,time){
         pickSt('todo');$('btnDel').style.display='none';$('fPr').value='';$('fE').value='';
         modalSubs=[];renderSubs();
     }
-    $('modBg').classList.add('on');setTimeout(()=>$('fT').focus(),80);
+    $('modBg').classList.add('on');
+    const modEl=$('modBg').querySelector('.mod');if(modEl)modEl.scrollTop=0;
+    setTimeout(()=>$('fT').focus(),80);
 }
 function closeMod(e){if(e&&e.target!==e.currentTarget)return;$('modBg').classList.remove('on');editId=null;if(reopenBV){reopenBV=false;openBV()}}
 function saveEv(){

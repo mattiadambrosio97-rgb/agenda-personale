@@ -625,13 +625,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
     .nav-vb{padding:5px 10px;font-size:11px;border-radius:6px;min-height:28px}
     .nav-tb{padding:5px 10px;font-size:11px;border-radius:6px;min-height:28px}
 
-    /* Hide secondary actions, show via mobile menu */
+    /* Hide everything except nav from header — moved to mobile toolbar */
     .hdr .qi-wrap{display:none}
     .hdr .thm{display:none}
     .hdr .sync-dot{display:none}
     .hdr [onclick="startReview()"]{display:none}
-    .hdr [onclick="openBV()"]{font-size:11px;height:28px;padding:0 8px;border-radius:6px}
-    .hdr [onclick="togSearch()"]{width:36px;height:36px;font-size:14px}
+    .hdr [onclick="openBV()"]{display:none}
+    .hdr [onclick="togSearch()"]{display:none}
+    .hdr [onclick*="openMod()"]{display:none}
+    .hdr .nav-vb{display:none}
+    .hdr .focus-dot{display:none}
+
+    /* Mobile toolbar visible */
+    .m-toolbar{display:flex!important}
 
     /* --- Main layout --- */
     .main{flex-direction:column}

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Agenda">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <title>Agenda — Mattia D'Ambrosio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -608,27 +608,40 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
     .bv-body{padding-bottom:calc(8px + env(safe-area-inset-bottom))!important}
     .focus-ov{padding-bottom:env(safe-area-inset-bottom)}
 
-    /* --- Header: 2-row compact mobile layout --- */
-    .hdr{padding:4px 8px;gap:3px;flex-wrap:wrap;justify-content:center;position:sticky;top:0;z-index:50}
+    /* --- Header: ultra-compact mobile --- */
+    .hdr{padding:6px 10px;gap:0;flex-wrap:nowrap;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
     .hdr-brand{display:none}
-    .hdr-nav{gap:3px;flex-wrap:wrap;justify-content:center;width:100%}
+    .hdr-nav{gap:2px;flex-wrap:nowrap;justify-content:flex-end;width:auto;align-items:center}
     .hdr-sep{display:none}
-    .nav-range{min-width:100px;font-size:11px;font-weight:800;order:-1}
 
-    /* --- Touch targets: 44px minimum (Apple HIG) --- */
-    .ib{width:44px;height:44px;border-radius:10px;font-size:16px}
-    .ab{height:44px;padding:0 14px;font-size:13px;border-radius:10px}
-    .nav-vb{padding:8px 12px;font-size:12px;border-radius:8px;min-height:36px}
-    .nav-tb{padding:8px 14px;font-size:12px;border-radius:8px;min-height:36px}
-    .thm{width:50px;height:28px;border-radius:14px}
-    .thm::after{width:22px;height:22px;top:3px;left:3px}
-    .dark .thm::after{transform:translateX(22px)}
-    .focus-dot{width:44px;height:44px;border-radius:10px}
-    .focus-dot-inner{width:10px;height:10px}
+    /* Row 1: focus-dot | nav-range | nav arrows | +Nuovo — single compact line */
+    .focus-dot{width:36px;height:36px;border-radius:8px;margin-right:4px}
+    .focus-dot-inner{width:8px;height:8px}
+    .nav-range{min-width:auto;font-size:12px;font-weight:800;text-align:center;flex:1;order:0}
+    .ib{width:36px;height:36px;border-radius:8px;font-size:14px}
+    .ab{height:36px;padding:0 10px;font-size:12px;border-radius:8px}
+
+    /* View tabs: compact pill row */
+    .nav-vb{padding:5px 10px;font-size:11px;border-radius:6px;min-height:28px}
+    .nav-tb{padding:5px 10px;font-size:11px;border-radius:6px;min-height:28px}
+
+    /* Hide secondary actions, show via mobile menu */
+    .hdr .qi-wrap{display:none}
+    .hdr .thm{display:none}
+    .hdr .sync-dot{display:none}
+    .hdr [onclick="startReview()"]{display:none}
+    .hdr [onclick="openBV()"]{font-size:11px;height:28px;padding:0 8px;border-radius:6px}
+    .hdr [onclick="togSearch()"]{width:36px;height:36px;font-size:14px}
 
     /* --- Main layout --- */
     .main{flex-direction:column}
-    .gv{min-height:55vh}
+    .gv{min-height:auto;flex:1}
+
+    /* --- Week grid: 3-day visible with horizontal scroll --- */
+    .dh-cols{overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
+    .dh{min-width:calc((100vw - 38px) / 3);scroll-snap-align:start;flex:none}
+    .dr{overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
+    .dc{min-width:calc((100vw - 38px) / 3);flex:none;scroll-snap-align:start}
 
     /* --- Sidebar: bottom sheet with drag handle --- */
     .sb{position:fixed;bottom:0;left:0;right:0;width:100%!important;height:55vh;z-index:100;border-left:none;border-top:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.18);transition:transform .3s cubic-bezier(.32,.72,0,1);will-change:transform;padding-bottom:env(safe-area-inset-bottom)}
@@ -832,6 +845,25 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 .sync-dot.offline{background:var(--red)}
 /* Confetti canvas */
 .confetti-canvas{position:fixed;inset:0;z-index:99999;pointer-events:none}
+/* Mobile toolbar */
+.m-toolbar{display:none;align-items:center;justify-content:space-between;padding:4px 10px;border-bottom:1px solid var(--border);background:var(--surface);gap:4px;flex-shrink:0}
+.m-toolbar .mt-views{display:flex;gap:2px;background:var(--bg);border-radius:8px;padding:2px}
+.m-toolbar .mt-v{padding:6px 12px;border-radius:6px;border:none;background:none;color:var(--text-m);font-size:12px;font-weight:700;font-family:var(--font);cursor:pointer}
+.m-toolbar .mt-v.on{background:var(--accent);color:#fff}
+.m-toolbar .mt-tools{display:flex;gap:2px;align-items:center}
+.m-toolbar .mt-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;font-family:var(--font)}
+.m-toolbar .mt-btn:active{transform:scale(.92);opacity:.7}
+/* Mobile more menu */
+.m-more-menu{display:none;position:fixed;bottom:0;left:0;right:0;z-index:3100;background:var(--surface);border-radius:20px 20px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.25);padding:12px 16px;padding-bottom:calc(16px + env(safe-area-inset-bottom));animation:modSlideUp .25s cubic-bezier(.32,.72,0,1)}
+.m-more-menu.on{display:block}
+.m-more-menu .mm-handle{width:36px;height:5px;background:var(--border);border-radius:3px;margin:0 auto 14px}
+.m-more-menu .mm-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.m-more-menu .mm-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:12px;border:1px solid var(--border-light);background:var(--surface2);cursor:pointer;font-family:var(--font)}
+.m-more-menu .mm-item:active{transform:scale(.94);background:var(--accent-soft)}
+.m-more-menu .mm-icon{font-size:22px}
+.m-more-menu .mm-label{font-size:10px;font-weight:700;color:var(--text2);text-align:center}
+.m-more-bg{display:none;position:fixed;inset:0;z-index:3099;background:rgba(0,0,0,.4)}
+.m-more-bg.on{display:block}
 </style>
 </head>
 <body>
@@ -885,6 +917,37 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
         </div>
         <button class="thm" onclick="togDark()" title="Dark mode"></button>
         <span class="sync-dot" id="syncDot" title="Sync"></span>
+    </div>
+</div>
+
+<!-- MOBILE TOOLBAR -->
+<div class="m-toolbar" id="mToolbar">
+    <div class="mt-views">
+        <button class="mt-v" data-v="day" onclick="setV('day')">Giorno</button>
+        <button class="mt-v on" data-v="week" onclick="setV('week')">Sett</button>
+        <button class="mt-v" data-v="month" onclick="setV('month')">Mese</button>
+    </div>
+    <div class="mt-tools">
+        <button class="mt-btn" onclick="togSearch()" title="Cerca">🔍</button>
+        <button class="mt-btn" onclick="togQI()" title="Idea">💡</button>
+        <button class="mt-btn" onclick="openMod()" title="Nuovo" style="background:var(--accent);color:#fff;border-color:var(--accent);font-weight:900;font-size:18px">+</button>
+        <button class="mt-btn" onclick="togMobileMore()" title="Altro" style="font-size:16px;font-weight:900;letter-spacing:1px">···</button>
+    </div>
+</div>
+
+<!-- MOBILE MORE MENU -->
+<div class="m-more-bg" id="mMoreBg" onclick="closeMobileMore()"></div>
+<div class="m-more-menu" id="mMoreMenu">
+    <div class="mm-handle"></div>
+    <div class="mm-grid">
+        <div class="mm-item" onclick="openBV();closeMobileMore()"><span class="mm-icon">📋</span><span class="mm-label">Board</span></div>
+        <div class="mm-item" onclick="startReview();closeMobileMore()"><span class="mm-icon">📊</span><span class="mm-label">Review</span></div>
+        <div class="mm-item" onclick="startFocus();closeMobileMore()"><span class="mm-icon">🎯</span><span class="mm-label">Focus</span></div>
+        <div class="mm-item" onclick="togDark();closeMobileMore()"><span class="mm-icon">🌙</span><span class="mm-label">Dark</span></div>
+        <div class="mm-item" onclick="exportBackup();closeMobileMore()"><span class="mm-icon">📥</span><span class="mm-label">Backup</span></div>
+        <div class="mm-item" onclick="$('importFile').click();closeMobileMore()"><span class="mm-icon">📤</span><span class="mm-label">Importa</span></div>
+        <div class="mm-item" onclick="togQI();closeMobileMore()"><span class="mm-icon">💡</span><span class="mm-label">Idea</span></div>
+        <div class="mm-item" onclick="togSearch();closeMobileMore()"><span class="mm-icon">🔍</span><span class="mm-label">Cerca</span></div>
     </div>
 </div>
 
@@ -2784,6 +2847,34 @@ function initTouch(){
 // Dark
 function togDark(){document.body.classList.toggle('dark');lsSet('agenda_dark',document.body.classList.contains('dark')?'1':'0')}
 
+// Mobile more menu
+function togMobileMore(){$('mMoreMenu').classList.toggle('on');$('mMoreBg').classList.toggle('on')}
+function closeMobileMore(){$('mMoreMenu').classList.remove('on');$('mMoreBg').classList.remove('on')}
+
+// Sync mobile toolbar view tabs with main view
+const origSetV=typeof setV==='function'?setV:null;
+(function(){
+    const _setV=setV;
+    setV=function(v){
+        _setV(v);
+        // Update mobile toolbar tabs
+        document.querySelectorAll('.mt-v').forEach(b=>{b.classList.toggle('on',b.dataset.v===v)});
+    };
+})();
+
+// Sync horizontal scroll between day headers and grid columns on mobile
+function initMobileScrollSync(){
+    const dhCols=$('dhCols'),dr=$('dr');
+    if(!dhCols||!dr)return;
+    let syncing=false;
+    dhCols.addEventListener('scroll',function(){
+        if(syncing)return;syncing=true;dr.scrollLeft=dhCols.scrollLeft;syncing=false;
+    });
+    dr.addEventListener('scroll',function(){
+        if(syncing)return;syncing=true;dhCols.scrollLeft=dr.scrollLeft;syncing=false;
+    });
+}
+
 // Keys
 document.addEventListener('keydown',e=>{
     if($('searchOv').classList.contains('on')){if(e.key==='Escape')closeSearch();return}
@@ -2822,7 +2913,7 @@ $('pinInput').addEventListener('keydown',function(e){if(e.key==='Enter')checkPin
 function initApp(){
     if(localStorage.getItem('agenda_dark')==='1')document.body.classList.add('dark');
     const sv=localStorage.getItem('agenda_view');if(sv)view=sv;
-    processTickler();cleanOldQuick2();load();render();scrollNow();initLasso();initTouch();
+    processTickler();cleanOldQuick2();load();render();scrollNow();initLasso();initTouch();initMobileScrollSync();
     if(localStorage.getItem('agenda_bv')==='1'){
         bvMode=localStorage.getItem('agenda_bvtab')||'kanban';
         openBV();

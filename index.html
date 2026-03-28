@@ -3140,68 +3140,80 @@ function initFirebaseSync(){
     const SYNC_KEYS=['agenda_events','agenda_inbox','agenda_someday','agenda_archive','agenda_waiting','agenda_projects','agenda_tickler','agenda_quick2'];
     const ref=db.ref('agenda');
     const dot=document.getElementById('syncDot');
-    let skipNextRemote=false;
+    let localTs=Date.now();
+    let ignoreRemote=false;
 
-    // Upload all local data to Firebase
     function pushAll(){
         dot.className='sync-dot syncing';dot.title='Syncing...';
-        const data={_ts:Date.now()};
+        localTs=Date.now();
+        const data={_ts:localTs};
         SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v)data[k]=v});
-        skipNextRemote=true;
+        ignoreRemote=true;
         ref.set(data).then(()=>{
             dot.className='sync-dot';dot.title='Sincronizzato';
-            setTimeout(()=>{skipNextRemote=false},500);
-        }).catch(()=>{dot.className='sync-dot offline';dot.title='Errore sync'});
+            setTimeout(()=>{ignoreRemote=false},1000);
+        }).catch(()=>{dot.className='sync-dot offline';dot.title='Errore sync';ignoreRemote=false});
     }
 
-    // Listen for remote changes
-    ref.on('value',snap=>{
-        if(skipNextRemote)return;
-        const data=snap.val();if(!data)return;
-        dot.className='sync-dot syncing';dot.title='Ricevendo...';
+    function applyRemote(data){
         let changed=false;
         SYNC_KEYS.forEach(k=>{
             if(data[k]&&data[k]!==localStorage.getItem(k)){
                 localStorage.setItem(k,data[k]);changed=true;
             }
         });
+        localTs=data._ts;
         if(changed){
-            // Reload app data
             try{const r=localStorage.getItem('agenda_events');if(r)evs=JSON.parse(r)}catch(e){}
             render();
         }
-        dot.className='sync-dot';dot.title='Sincronizzato';
+    }
+
+    // Step 1: Read Firebase ONCE, compare timestamps, decide who wins
+    ref.once('value').then(snap=>{
+        const remote=snap.val();
+        if(!remote||!remote._ts){
+            // Firebase empty: push local data up
+            pushAll();
+        } else if(remote._ts>localTs){
+            // Remote is NEWER: pull down
+            dot.className='sync-dot syncing';dot.title='Ricevendo...';
+            applyRemote(remote);
+            dot.className='sync-dot';dot.title='Sincronizzato';
+        } else {
+            // Local is newer or equal: push up
+            pushAll();
+        }
+
+        // Step 2: NOW start live listener (after initial sync is resolved)
+        ref.on('value',snap2=>{
+            if(ignoreRemote)return;
+            const d2=snap2.val();if(!d2||!d2._ts)return;
+            if(d2._ts<=localTs)return; // only accept newer data
+            dot.className='sync-dot syncing';dot.title='Ricevendo...';
+            applyRemote(d2);
+            dot.className='sync-dot';dot.title='Sincronizzato';
+        });
     });
 
-    // Monitor connection
     db.ref('.info/connected').on('value',snap=>{
         if(!snap.val()){dot.className='sync-dot offline';dot.title='Offline'}
         else{dot.className='sync-dot';dot.title='Connesso'}
     });
 
-    // Expose pushAll globally so save() can trigger it
-    window.fbSync={
-        init:function(){pushAll()},
-        push:pushAll
-    };
+    window.fbSync={push:pushAll};
 
-    // Override save functions to also push to Firebase
-    const origSave=window.save||function(){};
     const SAVE_FNS=['save','saveInbox','saveSomeday','saveArchive','saveWaiting','saveProjects','saveTickler','saveQuick2'];
     SAVE_FNS.forEach(fnName=>{
         const orig=window[fnName];
         if(orig){
             window[fnName]=function(){
                 orig.apply(this,arguments);
-                // Debounce: push after 300ms of no changes
                 clearTimeout(window._fbDebounce);
                 window._fbDebounce=setTimeout(pushAll,300);
             };
         }
     });
-
-    // Initial push
-    pushAll();
 }
 </script>
 </body>

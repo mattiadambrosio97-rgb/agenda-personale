@@ -727,6 +727,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;margin-left:4px;transition:background .3s}
 .sync-dot.syncing{background:var(--orange);animation:pulse 1s ease infinite}
 .sync-dot.offline{background:var(--red)}
+/* Confetti canvas */
+.confetti-canvas{position:fixed;inset:0;z-index:99999;pointer-events:none}
 </style>
 </head>
 <body>
@@ -1075,6 +1077,48 @@ function $(id){return document.getElementById(id)}
 // XSS protection: escape HTML entities
 function esc(s){if(!s)return '';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 
+// Confetti celebration
+function confetti(){
+    const c=document.createElement('canvas');
+    c.className='confetti-canvas';
+    c.width=window.innerWidth;c.height=window.innerHeight;
+    document.body.appendChild(c);
+    const ctx=c.getContext('2d');
+    const colors=['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff922b','#cc5de8','#20c997','#ff6b6b'];
+    const pieces=[];
+    for(let i=0;i<80;i++){
+        pieces.push({
+            x:c.width/2+(Math.random()-.5)*100,
+            y:c.height/2,
+            vx:(Math.random()-.5)*16,
+            vy:Math.random()*-18-4,
+            w:Math.random()*8+4,
+            h:Math.random()*6+3,
+            color:colors[Math.floor(Math.random()*colors.length)],
+            rot:Math.random()*6.28,
+            rv:(Math.random()-.5)*.3,
+            g:.4+Math.random()*.2
+        });
+    }
+    let frame=0;
+    function draw(){
+        ctx.clearRect(0,0,c.width,c.height);
+        let alive=false;
+        pieces.forEach(p=>{
+            p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.rot+=p.rv;p.vx*=.99;
+            if(p.y<c.height+50)alive=true;
+            ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);
+            ctx.fillStyle=p.color;ctx.globalAlpha=Math.max(0,1-frame/90);
+            ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+            ctx.restore();
+        });
+        frame++;
+        if(alive&&frame<100)requestAnimationFrame(draw);
+        else c.remove();
+    }
+    draw();
+}
+
 // Safe localStorage with quota handling
 function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){if(e.name==='QuotaExceededError'){alert('Spazio di archiviazione esaurito! Esporta un backup e svuota l\'archivio.')}}}
 function save(){lsSet(LS,JSON.stringify(evs))}
@@ -1314,7 +1358,7 @@ function showTriage(id,e){
     pop.style.left=x+'px';pop.style.top=y+'px';
 }
 function closeTriage(){$('triagePop').classList.remove('on');triageId=null}
-function triageDone(){const ev=evs.find(x=>x.id===triageId);if(ev)ev.status='done';save();closeTriage();render()}
+function triageDone(){const ev=evs.find(x=>x.id===triageId);if(ev)ev.status='done';save();closeTriage();render();confetti()}
 function triageBacklog(){const ev=evs.find(x=>x.id===triageId);if(ev){ev.date='';ev.startTime=''}save();closeTriage();render()}
 function triageExtend(){const ev=evs.find(x=>x.id===triageId);if(ev)ev.duration=(ev.duration||30)+30;save();closeTriage();render()}
 function triageOpenFull(){const id=triageId;closeTriage();openMod(id)}
@@ -2261,7 +2305,7 @@ function saveEv(){
     closeMod();render();
 }
 function delEv(){if(!editId)return;evs=evs.filter(x=>x.id!==editId);save();closeMod();render()}
-function toggleDone(id){const ev=evs.find(x=>x.id===id);if(!ev)return;ev.status=(ev.status==='done')?'todo':'done';save();render()}
+function toggleDone(id){const ev=evs.find(x=>x.id===id);if(!ev)return;const wasDone=ev.status==='done';ev.status=wasDone?'todo':'done';save();render();if(!wasDone)confetti()}
 function quickDel(id){if(!confirm('Eliminare questa task?'))return;evs=evs.filter(x=>x.id!==id);save();render()}
 
 // SUBTASK
@@ -2312,7 +2356,7 @@ function bulkBacklog(){
 }
 function bulkDone(){
     selected.forEach(id=>{const ev=evs.find(x=>x.id===id);if(ev)ev.status='done'});
-    selected.clear();save();render();updSel();
+    selected.clear();save();render();updSel();confetti();
 }
 
 // FOCUS MODE
@@ -2372,7 +2416,7 @@ function renderFocus(){
 function focusSetSt(st){
     const ev=focusList[focusIdx];
     ev.status=st;save();
-    if(st==='done'&&focusIdx<focusList.length-1)focusIdx++;
+    if(st==='done'){confetti();if(focusIdx<focusList.length-1)focusIdx++}
     renderFocus();
 }
 function focusPrev(){if(focusIdx>0){focusIdx--;renderFocus()}}
@@ -2606,11 +2650,11 @@ document.addEventListener('keydown',e=>{
 const PIN_HASH='agenda_pin_hash';
 const PIN_SESSION='agenda_pin_ok';
 // Default PIN: 1234 — change via console: localStorage.setItem('agenda_pin_hash', btoa('YOUR_NEW_PIN'))
-if(!localStorage.getItem(PIN_HASH))lsSet(PIN_HASH,btoa('1234'));
+if(!localStorage.getItem(PIN_HASH))lsSet(PIN_HASH,btoa('020597'));
 
 function checkPin(){
     const input=$('pinInput').value;
-    const stored=atob(localStorage.getItem(PIN_HASH)||btoa('1234'));
+    const stored=atob(localStorage.getItem(PIN_HASH)||btoa('020597'));
     if(input===stored){
         sessionStorage.setItem(PIN_SESSION,'1');
         $('pinLock').classList.add('hidden');

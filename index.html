@@ -3241,16 +3241,24 @@ function initFirebaseSync(){
     const SYNC_KEYS=['agenda_events','agenda_inbox','agenda_someday','agenda_archive','agenda_waiting','agenda_projects','agenda_tickler','agenda_quick2'];
     const ref=db.ref('agenda');
     const dot=document.getElementById('syncDot');
-    let localTs=Date.now();
+    let localTs=0; // Start at 0 so Firebase always wins on fresh load
     let ignoreRemote=false;
+    let initialSyncDone=false; // Block pushes until initial sync resolves
+
+    function localHasData(){
+        return SYNC_KEYS.some(k=>{const v=localStorage.getItem(k);return v&&v!=='[]'&&v!=='null'});
+    }
 
     function pushAll(){
+        // NEVER push empty data — this would destroy Firebase
+        if(!localHasData()){return}
         dot.className='sync-dot syncing';dot.title='Syncing...';
         localTs=Date.now();
         const data={_ts:localTs};
         SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v)data[k]=v});
         ignoreRemote=true;
         ref.set(data).then(()=>{
+            localStorage.setItem('agenda_sync_ts',String(localTs));
             dot.className='sync-dot';dot.title='Sincronizzato';
             setTimeout(()=>{ignoreRemote=false},1000);
         }).catch(()=>{dot.className='sync-dot offline';dot.title='Errore sync';ignoreRemote=false});
@@ -3264,33 +3272,44 @@ function initFirebaseSync(){
             }
         });
         localTs=data._ts;
+        localStorage.setItem('agenda_sync_ts',String(localTs));
         if(changed){
             try{const r=localStorage.getItem('agenda_events');if(r)evs=JSON.parse(r)}catch(e){}
             render();
         }
     }
 
-    // Step 1: Read Firebase ONCE, compare timestamps, decide who wins
+    // Step 1: ALWAYS read Firebase first, then decide
     ref.once('value').then(snap=>{
         const remote=snap.val();
         if(!remote||!remote._ts){
-            // Firebase empty: push local data up
-            pushAll();
-        } else if(remote._ts>localTs){
-            // Remote is NEWER: pull down
+            // Firebase empty — only push if we have local data
+            if(localHasData())pushAll();
+        } else if(!localHasData()){
+            // Local is EMPTY but Firebase has data — ALWAYS pull down
             dot.className='sync-dot syncing';dot.title='Ricevendo...';
             applyRemote(remote);
             dot.className='sync-dot';dot.title='Sincronizzato';
         } else {
-            // Local is newer or equal: push up
-            pushAll();
+            // Both have data — compare timestamps
+            const savedTs=parseInt(localStorage.getItem('agenda_sync_ts')||'0');
+            if(remote._ts>savedTs){
+                // Remote is newer than our last known sync
+                dot.className='sync-dot syncing';dot.title='Ricevendo...';
+                applyRemote(remote);
+                dot.className='sync-dot';dot.title='Sincronizzato';
+            } else {
+                // Local is newer — push up
+                pushAll();
+            }
         }
+        initialSyncDone=true;
 
-        // Step 2: NOW start live listener (after initial sync is resolved)
+        // Step 2: Live listener (after initial sync)
         ref.on('value',snap2=>{
             if(ignoreRemote)return;
             const d2=snap2.val();if(!d2||!d2._ts)return;
-            if(d2._ts<=localTs)return; // only accept newer data
+            if(d2._ts<=localTs)return;
             dot.className='sync-dot syncing';dot.title='Ricevendo...';
             applyRemote(d2);
             dot.className='sync-dot';dot.title='Sincronizzato';
@@ -3310,6 +3329,7 @@ function initFirebaseSync(){
         if(orig){
             window[fnName]=function(){
                 orig.apply(this,arguments);
+                if(!initialSyncDone)return; // Block pushes until initial sync resolves
                 clearTimeout(window._fbDebounce);
                 window._fbDebounce=setTimeout(pushAll,300);
             };

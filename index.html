@@ -645,6 +645,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
     .dr{overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
     .dc{min-width:calc((100vw - 38px) / 3);flex:none;scroll-snap-align:start}
 
+    /* --- Day view: full width single column --- */
+    .gv[data-view="day"] .dh-cols{overflow-x:hidden}
+    .gv[data-view="day"] .dh{min-width:100%;width:100%}
+    .gv[data-view="day"] .dr{overflow-x:hidden}
+    .gv[data-view="day"] .dc{min-width:100%;width:100%}
+
     /* --- Sidebar: bottom sheet with drag handle --- */
     .sb{position:fixed;bottom:0;left:0;right:0;width:100%!important;height:55vh;z-index:100;border-left:none;border-top:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.18);transition:transform .3s cubic-bezier(.32,.72,0,1);will-change:transform;padding-bottom:env(safe-area-inset-bottom)}
     .sb::before{content:'';display:block;width:36px;height:5px;background:var(--border);border-radius:3px;margin:10px auto 6px;flex-shrink:0}
@@ -708,7 +714,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 
     /* --- Search --- */
     .search-ov{padding-top:0;align-items:flex-start}
-    .search-box{width:100%;border-radius:0 0 16px 16px;border-top:none;max-height:100vh;max-height:100dvh}
+    .search-box{width:100%;border-radius:0 0 16px 16px;border-top:none;max-height:100vh;max-height:100dvh;padding-top:calc(8px + env(safe-area-inset-top))}
     .search-input{font-size:17px;padding:16px 18px}
     .sr-item{padding:14px 18px;min-height:48px}
     .sr-title{font-size:15px}
@@ -935,12 +941,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 <!-- MOBILE TOOLBAR -->
 <div class="m-toolbar" id="mToolbar">
     <div class="mt-views">
-        <button class="mt-v" data-v="day" onclick="setV('day')">Giorno</button>
-        <button class="mt-v on" data-v="week" onclick="setV('week')">Sett</button>
-        <button class="mt-v" data-v="month" onclick="setV('month')">Mese</button>
+        <button class="mt-v" data-v="day" onclick="setV('day')">G</button>
+        <button class="mt-v on" data-v="week" onclick="setV('week')">S</button>
+        <button class="mt-v" data-v="month" onclick="setV('month')">M</button>
     </div>
     <div class="mt-tools">
         <button class="mt-btn" onclick="openBV()" title="Board" style="font-size:11px;font-weight:800;width:auto;padding:0 10px">Board</button>
+        <button class="mt-btn" onclick="togQI()" title="Idea rapida">💡</button>
         <button class="mt-btn" onclick="togSearch()" title="Cerca">🔍</button>
         <button class="mt-btn" onclick="openMod()" title="Nuovo" style="background:var(--accent);color:#fff;border-color:var(--accent);font-weight:900;font-size:18px">+</button>
         <button class="mt-btn" onclick="togMobileMore()" title="Altro" style="font-size:16px;font-weight:900;letter-spacing:1px">···</button>
@@ -958,8 +965,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
         <div class="mm-item" onclick="togDark();closeMobileMore()"><span class="mm-icon">🌙</span><span class="mm-label">Dark</span></div>
         <div class="mm-item" onclick="exportBackup();closeMobileMore()"><span class="mm-icon">📥</span><span class="mm-label">Backup</span></div>
         <div class="mm-item" onclick="$('importFile').click();closeMobileMore()"><span class="mm-icon">📤</span><span class="mm-label">Importa</span></div>
-        <div class="mm-item" onclick="togQI();closeMobileMore()"><span class="mm-icon">💡</span><span class="mm-label">Idea</span></div>
-        <div class="mm-item" onclick="togSearch();closeMobileMore()"><span class="mm-icon">🔍</span><span class="mm-label">Cerca</span></div>
     </div>
 </div>
 
@@ -1343,7 +1348,7 @@ evs=[
 {id:uid(),title:'Call Venditore a Distanza',cat:'adt',date:'2026-04-03',startTime:'15:30',duration:60,note:''},
 ];save()}
 
-function render(){updNav();if(view==='month'){$('gv').classList.add('hide');$('mv').classList.remove('hide');rMonth()}else{$('gv').classList.remove('hide');$('mv').classList.add('hide');rGrid()}rBL();rNow();rDayPanel()}
+function render(){$('gv').dataset.view=view;updNav();if(view==='month'){$('gv').classList.add('hide');$('mv').classList.remove('hide');rMonth()}else{$('gv').classList.remove('hide');$('mv').classList.add('hide');rGrid()}rBL();rNow();rDayPanel()}
 
 function updNav(){
     document.querySelectorAll('.nav-vb').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
@@ -1824,7 +1829,7 @@ function navN(){if(view==='day')anchor=addD(anchor,1);else if(view==='week')anch
 function navPD(){anchor=addD(anchor,-1);render()}
 function navND(){anchor=addD(anchor,1);render()}
 function navT(){anchor=tdy();render();scrollNow()}
-function setV(v){view=v;lsSet('agenda_view',v);render();if(v!=='month')scrollNow()}
+function setV(v){view=v;lsSet('agenda_view',v);const gv=$('gv');if(gv)gv.dataset.view=v;render();if(v!=='month')scrollNow()}
 function scrollNow(){requestAnimationFrame(()=>{const g=$('gs');const h=new Date().getHours();g.scrollTop=Math.max(0,(h-H0-1)*2)*SH})}
 
 // Sidebar
@@ -2866,6 +2871,29 @@ function initPullRefresh(){
     document.documentElement.style.overscrollBehavior='none';
 }
 
+// Swipe navigation (edge swipe: left/right to go back/forward days)
+function initSwipeNav(){
+    if(!('ontouchstart' in window))return;
+    const grid=$('gv');if(!grid)return;
+    let startX=0,startY=0,swiping=false;
+    grid.addEventListener('touchstart',function(e){
+        startX=e.touches[0].clientX;startY=e.touches[0].clientY;swiping=false;
+    },{passive:true});
+    grid.addEventListener('touchmove',function(e){
+        if(swiping)return;
+        const dx=e.touches[0].clientX-startX;
+        const dy=Math.abs(e.touches[0].clientY-startY);
+        if(Math.abs(dx)>40&&Math.abs(dx)>dy*1.5)swiping=true;
+    },{passive:true});
+    grid.addEventListener('touchend',function(e){
+        if(!swiping)return;
+        const dx=e.changedTouches[0].clientX-startX;
+        if(dx>60){view==='day'?navPD():navP()}
+        else if(dx<-60){view==='day'?navND():navN()}
+        swiping=false;
+    },{passive:true});
+}
+
 // Dark
 function togDark(){document.body.classList.toggle('dark');lsSet('agenda_dark',document.body.classList.contains('dark')?'1':'0')}
 
@@ -2954,7 +2982,7 @@ $('pinInput').addEventListener('keydown',function(e){if(e.key==='Enter')checkPin
 function initApp(){
     if(localStorage.getItem('agenda_dark')==='1')document.body.classList.add('dark');
     const sv=localStorage.getItem('agenda_view');if(sv)view=sv;
-    processTickler();cleanOldQuick2();load();render();scrollNow();initLasso();initTouch();initMobileScrollSync();initMobileSwipeNav();initPullRefresh();
+    processTickler();cleanOldQuick2();load();render();scrollNow();initLasso();initTouch();initMobileScrollSync();initMobileSwipeNav();initSwipeNav();initPullRefresh();
     if(localStorage.getItem('agenda_bv')==='1'){
         bvMode=localStorage.getItem('agenda_bvtab')||'kanban';
         openBV();

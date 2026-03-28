@@ -3240,28 +3240,60 @@ function initFirebaseSync(){
     const db=firebase.database();
     const SYNC_KEYS=['agenda_events','agenda_inbox','agenda_someday','agenda_archive','agenda_waiting','agenda_projects','agenda_tickler','agenda_quick2'];
     const ref=db.ref('agenda');
+    const backupRef=db.ref('agenda_backup');
     const dot=document.getElementById('syncDot');
-    let localTs=0; // Start at 0 so Firebase always wins on fresh load
     let ignoreRemote=false;
-    let initialSyncDone=false; // Block pushes until initial sync resolves
+    let initialSyncDone=false;
 
     function localHasData(){
-        return SYNC_KEYS.some(k=>{const v=localStorage.getItem(k);return v&&v!=='[]'&&v!=='null'});
+        return SYNC_KEYS.some(k=>{
+            const v=localStorage.getItem(k);
+            if(!v||v==='[]'||v==='null'||v==='{}')return false;
+            try{const p=JSON.parse(v);return Array.isArray(p)?p.length>0:!!p}catch(e){return v.length>2}
+        });
+    }
+
+    function remoteHasData(data){
+        if(!data||!data._ts)return false;
+        return SYNC_KEYS.some(k=>{
+            if(!data[k])return false;
+            try{const p=JSON.parse(data[k]);return Array.isArray(p)?p.length>0:!!p}catch(e){return data[k].length>2}
+        });
+    }
+
+    function countItems(data){
+        let n=0;
+        SYNC_KEYS.forEach(k=>{
+            const v=data?data[k]:localStorage.getItem(k);
+            if(v){try{const p=JSON.parse(v);n+=Array.isArray(p)?p.length:1}catch(e){}}
+        });
+        return n;
     }
 
     function pushAll(){
-        // NEVER push empty data — this would destroy Firebase
-        if(!localHasData()){return}
+        if(!localHasData()){console.warn('[SYNC] pushAll blocked: no local data');return}
         dot.className='sync-dot syncing';dot.title='Syncing...';
-        localTs=Date.now();
-        const data={_ts:localTs};
+        const ts=Date.now();
+        const data={_ts:ts};
         SYNC_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v)data[k]=v});
+        // Backup BEFORE overwriting
         ignoreRemote=true;
-        ref.set(data).then(()=>{
-            localStorage.setItem('agenda_sync_ts',String(localTs));
-            dot.className='sync-dot';dot.title='Sincronizzato';
+        ref.once('value').then(oldSnap=>{
+            const old=oldSnap.val();
+            if(remoteHasData(old)){
+                backupRef.set(old);
+            }
+            return ref.set(data);
+        }).then(()=>{
+            localStorage.setItem('agenda_sync_ts',String(ts));
+            dot.className='sync-dot';dot.title='Sincronizzato ('+countItems(null)+' items)';
+            console.log('[SYNC] Pushed',countItems(null),'items, ts=',ts);
             setTimeout(()=>{ignoreRemote=false},1000);
-        }).catch(()=>{dot.className='sync-dot offline';dot.title='Errore sync';ignoreRemote=false});
+        }).catch(e=>{
+            console.error('[SYNC] Push failed',e);
+            dot.className='sync-dot offline';dot.title='Errore sync';
+            ignoreRemote=false;
+        });
     }
 
     function applyRemote(data){
@@ -3271,45 +3303,71 @@ function initFirebaseSync(){
                 localStorage.setItem(k,data[k]);changed=true;
             }
         });
-        localTs=data._ts;
-        localStorage.setItem('agenda_sync_ts',String(localTs));
+        localStorage.setItem('agenda_sync_ts',String(data._ts));
         if(changed){
             try{const r=localStorage.getItem('agenda_events');if(r)evs=JSON.parse(r)}catch(e){}
             render();
+            console.log('[SYNC] Applied remote,',countItems(data),'items');
         }
     }
 
-    // Step 1: ALWAYS read Firebase first, then decide
+    // ===== INITIAL SYNC =====
     ref.once('value').then(snap=>{
         const remote=snap.val();
-        if(!remote||!remote._ts){
-            // Firebase empty — only push if we have local data
-            if(localHasData())pushAll();
-        } else if(!localHasData()){
-            // Local is EMPTY but Firebase has data — ALWAYS pull down
+        const rHas=remoteHasData(remote);
+        const lHas=localHasData();
+        console.log('[SYNC] Initial: local='+lHas+'('+countItems(null)+'), remote='+rHas+'('+(remote?countItems(remote):0)+')');
+
+        if(!rHas&&!lHas){
+            // Both empty — check backup
+            console.log('[SYNC] Both empty, checking backup...');
+            backupRef.once('value').then(bSnap=>{
+                const backup=bSnap.val();
+                if(remoteHasData(backup)){
+                    console.log('[SYNC] Restoring from backup!',countItems(backup),'items');
+                    dot.className='sync-dot syncing';dot.title='Ripristino backup...';
+                    applyRemote(backup);
+                    ref.set(backup);
+                    dot.className='sync-dot';dot.title='Ripristinato da backup!';
+                }
+            });
+        } else if(!lHas&&rHas){
+            // Local empty, remote has data — pull
             dot.className='sync-dot syncing';dot.title='Ricevendo...';
             applyRemote(remote);
             dot.className='sync-dot';dot.title='Sincronizzato';
+        } else if(lHas&&!rHas){
+            // Local has data, remote empty/corrupt — push (and backup first if anything on remote)
+            pushAll();
         } else {
-            // Both have data — compare timestamps
+            // Both have data — SAFETY: never overwrite more items with fewer
+            const localCount=countItems(null);
+            const remoteCount=countItems(remote);
             const savedTs=parseInt(localStorage.getItem('agenda_sync_ts')||'0');
+
             if(remote._ts>savedTs){
-                // Remote is newer than our last known sync
-                dot.className='sync-dot syncing';dot.title='Ricevendo...';
-                applyRemote(remote);
-                dot.className='sync-dot';dot.title='Sincronizzato';
+                // Remote newer — but only apply if remote has >= items
+                if(remoteCount>=localCount*0.5){
+                    dot.className='sync-dot syncing';dot.title='Ricevendo...';
+                    applyRemote(remote);
+                    dot.className='sync-dot';dot.title='Sincronizzato';
+                } else {
+                    console.warn('[SYNC] Remote newer but has far fewer items ('+remoteCount+' vs '+localCount+'), keeping local');
+                    pushAll();
+                }
             } else {
-                // Local is newer — push up
                 pushAll();
             }
         }
         initialSyncDone=true;
 
-        // Step 2: Live listener (after initial sync)
+        // Live listener
         ref.on('value',snap2=>{
             if(ignoreRemote)return;
-            const d2=snap2.val();if(!d2||!d2._ts)return;
-            if(d2._ts<=localTs)return;
+            const d2=snap2.val();
+            if(!remoteHasData(d2))return;
+            const myTs=parseInt(localStorage.getItem('agenda_sync_ts')||'0');
+            if(d2._ts<=myTs)return;
             dot.className='sync-dot syncing';dot.title='Ricevendo...';
             applyRemote(d2);
             dot.className='sync-dot';dot.title='Sincronizzato';
@@ -3321,7 +3379,13 @@ function initFirebaseSync(){
         else{dot.className='sync-dot';dot.title='Connesso'}
     });
 
-    window.fbSync={push:pushAll};
+    window.fbSync={push:pushAll,restore:function(){
+        backupRef.once('value').then(s=>{
+            const b=s.val();
+            if(remoteHasData(b)){applyRemote(b);ref.set(b);alert('Backup ripristinato!')}
+            else{alert('Nessun backup disponibile')}
+        });
+    }};
 
     const SAVE_FNS=['save','saveInbox','saveSomeday','saveArchive','saveWaiting','saveProjects','saveTickler','saveQuick2'];
     SAVE_FNS.forEach(fnName=>{
@@ -3329,7 +3393,7 @@ function initFirebaseSync(){
         if(orig){
             window[fnName]=function(){
                 orig.apply(this,arguments);
-                if(!initialSyncDone)return; // Block pushes until initial sync resolves
+                if(!initialSyncDone)return;
                 clearTimeout(window._fbDebounce);
                 window._fbDebounce=setTimeout(pushAll,300);
             };

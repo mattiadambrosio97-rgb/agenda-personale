@@ -1347,37 +1347,7 @@ function checkOverlap(date,startTime,duration,excludeId){
         return s1<e2&&e1>s2;
     })||null;
 }
-function load(){try{const r=localStorage.getItem(LS);if(r)evs=JSON.parse(r)}catch(e){evs=[]}if(!evs.length)seed()}
-
-function seed(){
-evs=[
-// SAB 28/03 — Tech + Lettura
-{id:uid(),title:'Ottimizzazione tracciamenti GTM (parte 1)',cat:'adt',date:'2026-03-28',startTime:'08:30',duration:60,note:'9 subtask. Parte 2 lunedi.'},
-{id:uid(),title:'Leggere ricerche Claude (10 subtask)',cat:'adt',date:'2026-03-28',startTime:'09:30',duration:150,note:'Attenzione MKT, Lancio CDT, Referral, Scaling, Target Agenda, Camp 360, RevivaGolf, Cellulite, Match Betting, Arsenale RevivaGolf'},
-{id:uid(),title:'Revisionare copy email compleanni',cat:'adt',date:'2026-03-28',startTime:'12:00',duration:30,note:'Copy gia scritto da Claude.'},
-// LUN 30/03 — Admin + Tech + Manlio
-{id:uid(),title:'Verificare scraping scuole Veneto',cat:'camp',date:'2026-03-30',startTime:'08:30',duration:30,note:'Prima di Manlio. Chiedere espansione (30-35 EUR).'},
-{id:uid(),title:'Fatture Elvis + Poste Italiane',cat:'adt',date:'2026-03-30',startTime:'09:00',duration:30,note:''},
-{id:uid(),title:'GTM (parte 2)',cat:'adt',date:'2026-03-30',startTime:'09:30',duration:30,note:'Completamento ottimizzazione tracciamenti.'},
-{id:uid(),title:'Call Manlio 10:00-12:00',cat:'adt',date:'2026-03-30',startTime:'10:00',duration:120,note:'Match betting (NO), scuole Veneto, operativita.'},
-{id:uid(),title:'Project Board: fix bug e ottimizzazione',cat:'adt',date:'2026-03-30',startTime:'15:00',duration:180,note:'Promesso ad Alberto entro 03/04.'},
-// MAR 31/03 — ADT Strategia pura
-{id:uid(),title:'Pagamento fatture (Mattia FS, Massimo, Kevin, Terminal)',cat:'adt',date:'2026-03-31',startTime:'08:30',duration:30,note:'Deadline Massimo 31/03.'},
-{id:uid(),title:'Revisione RFM + strategia per cluster',cat:'adt',date:'2026-03-31',startTime:'09:00',duration:60,note:'Documento opzioni per Alberto.'},
-{id:uid(),title:'Specchietto rinnovi + percorsi attivi',cat:'adt',date:'2026-03-31',startTime:'10:00',duration:60,note:'Proiezioni mese per mese.'},
-{id:uid(),title:'Brainstorming Live/Webinar Ottaviani',cat:'usr',date:'2026-03-31',startTime:'11:00',duration:30,note:'Leggere report Claude e decidere.'},
-// MER 01/04 — Contenuti + Marketing
-{id:uid(),title:'Progetto videotestimonianze',cat:'adt',date:'2026-04-01',startTime:'08:30',duration:60,note:'Diagnosi + ristrutturazione flusso.'},
-{id:uid(),title:'Revisione 100 post Facebook ADT',cat:'adt',date:'2026-04-01',startTime:'09:30',duration:60,note:'Dopo revisione, dare a Kevin.'},
-{id:uid(),title:'Analisi marketing/copywriting Frank Merenda',cat:'adt',date:'2026-04-01',startTime:'10:30',duration:120,note:'Materiali Apify.'},
-// GIO 02/04 — Documentazione + Setup
-{id:uid(),title:'Procedure emergenza siti per Kevin',cat:'adt',date:'2026-04-02',startTime:'08:30',duration:60,note:'Checklist, accessi, guida step-by-step.'},
-{id:uid(),title:'KB Tenuta d\'Ambrosio per Claude',cat:'tenuta',date:'2026-04-02',startTime:'09:30',duration:60,note:'Raccogliere info, creare KB strutturato.'},
-{id:uid(),title:'Creare campagne Facebook Tenuta',cat:'tenuta',date:'2026-04-02',startTime:'10:30',duration:90,note:'Dopo KB Tenuta.'},
-// VEN 03/04 — AM Group + Call
-{id:uid(),title:'Costruire esperto Amazon + Cash Flow AM Group',cat:'amgroup',date:'2026-04-03',startTime:'08:30',duration:120,note:'KB Amazon + Cash Flow.'},
-{id:uid(),title:'Call Venditore a Distanza',cat:'adt',date:'2026-04-03',startTime:'15:30',duration:60,note:''},
-];save()}
+function load(){try{const r=localStorage.getItem(LS);if(r)evs=JSON.parse(r)}catch(e){evs=[]}}
 
 function render(){$('gv').dataset.view=view;updNav();if(view==='month'){$('gv').classList.add('hide');$('mv').classList.remove('hide');rMonth()}else{$('gv').classList.remove('hide');$('mv').classList.add('hide');rGrid()}rBL();rNow();rDayPanel()}
 

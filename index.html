@@ -655,13 +655,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
     .sb{position:fixed;bottom:0;left:0;right:0;width:100%!important;height:55vh;z-index:100;border-left:none;border-top:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.18);transition:transform .3s cubic-bezier(.32,.72,0,1);will-change:transform;padding-bottom:env(safe-area-inset-bottom)}
     .sb::before{content:'';display:block;width:36px;height:5px;background:var(--border);border-radius:3px;margin:10px auto 6px;flex-shrink:0}
     .sb.shut{width:100%!important;height:55vh;transform:translateY(100%);border:none}
-    .sb-tog{position:fixed;bottom:0;left:50%;transform:translateX(-50%);right:auto;top:auto;width:64px;height:30px;border-radius:14px 14px 0 0;border-bottom:none;z-index:101;font-size:10px}
-    .sb.shut~.sb-tog{bottom:0}
-    .sb-tog .arr{transform:rotate(-90deg)}
-    .sb.shut~.sb-tog .arr{transform:rotate(90deg)}
+    .sb-tog{display:none!important}
 
-    /* --- Day panel --- */
-    .day-panel{width:100%!important;border-left:none;border-top:1px solid var(--border);max-height:45vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+    /* --- Day panel: collapsed by default on mobile --- */
+    .day-panel{width:100%!important;border-left:none;border-top:1px solid var(--border);overflow:hidden;-webkit-overflow-scrolling:touch}
+    .day-panel .dp-section{display:none}
+    .day-panel.dp-open .dp-section{display:block}
+    .day-panel .dp-toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+    .day-panel .dp-toggle-label{font-size:12px;font-weight:800;color:var(--text-m);text-transform:uppercase;letter-spacing:.5px}
+    .day-panel .dp-toggle-arrow{font-size:14px;color:var(--text-m);transition:transform .2s}
+    .day-panel.dp-open .dp-toggle-arrow{transform:rotate(180deg)}
 
     /* --- Month grid --- */
     .mv{padding:4px 6px;overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -1570,6 +1573,11 @@ function rDayPanel(){
     if(d===today){nextEv=dayEvs.find(ev=>ev.startTime>nowTime&&ev.status!=='done')}
 
     let html='';
+    const isMobile=window.innerWidth<=768;
+    if(isMobile){
+        const summaryText=doneCount+'/'+dayEvs.length+' task · '+Math.round(totalMin/60*10)/10+'h';
+        html+=`<div class="dp-toggle" onclick="this.closest('.day-panel').classList.toggle('dp-open')"><span class="dp-toggle-label">Programma — ${summaryText}</span><span class="dp-toggle-arrow">▼</span></div>`;
+    }
 
     // Stats
     const pctDone=dayEvs.length?Math.round(doneCount/dayEvs.length*100):0;

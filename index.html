@@ -679,7 +679,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
     .mg-c{min-height:48px}
 
     /* --- Event cards --- */
-    .ev{min-height:44px;padding:5px 8px;border-radius:6px;touch-action:manipulation}
+    .ev{min-height:44px;padding:5px 8px;border-radius:6px;touch-action:manipulation;-webkit-user-select:none;user-select:none}
     .ev-n{font-size:12px;-webkit-line-clamp:2}
     .ev-btns{opacity:1;gap:4px}
     .ev-chk,.ev-del{width:34px;height:34px;font-size:20px;border-radius:8px}
@@ -1460,8 +1460,8 @@ function rGrid(){
             card.innerHTML=`${stDot}<span class="ev-t">${ev.startTime} – ${endT}</span><span class="ev-n">${esc(ev.title)}</span><span class="ev-c">${CL[ev.cat]||ev.cat}</span>${subHtml}<div class="ev-btns"><button class="ev-del" data-id="${ev.id}">&times;</button><button class="ev-chk" data-id="${ev.id}">&#10003;</button></div><div class="rz"></div>`;
             card.addEventListener('mousedown',e=>{if(e.target.classList.contains('rz')||e.target.classList.contains('ev-chk')||e.target.classList.contains('ev-del')||e.button!==0)return;startDrag(e,ev.id,card)});
             card.addEventListener('click',e=>{
-                if(e.target.classList.contains('ev-del')){e.stopPropagation();if('ontouchstart' in window){if(!e.target._lastTap||Date.now()-e.target._lastTap>400){e.target._lastTap=Date.now();return}e.target._lastTap=0}quickDel(ev.id);return}
-                if(e.target.classList.contains('ev-chk')){e.stopPropagation();if('ontouchstart' in window){if(!e.target._lastTap||Date.now()-e.target._lastTap>400){e.target._lastTap=Date.now();return}e.target._lastTap=0}toggleDone(ev.id);return}
+                if(e.target.classList.contains('ev-del')){e.stopPropagation();quickDel(ev.id);return}
+                if(e.target.classList.contains('ev-chk')){e.stopPropagation();toggleDone(ev.id);return}
                 if(e.target.classList.contains('rz')||didDrag)return;
                 if(e.ctrlKey||e.metaKey){e.stopPropagation();toggleSel(ev.id);return}
                 if(selected.size>0){toggleSel(ev.id);return}
@@ -3002,6 +3002,91 @@ function initSwipeNav(){
     },{passive:true});
 }
 
+// Touch drag for moving tasks on mobile (long-press to activate)
+function initTouchDrag(){
+    if(!('ontouchstart' in window))return;
+    const grid=$('gv');if(!grid)return;
+    let lpTimer=null,dragEv=null,dragCard=null,ghostEl=null,offY=0;
+
+    grid.addEventListener('touchstart',function(e){
+        const card=e.target.closest('.ev:not(.ghost)');
+        if(!card||e.target.closest('.ev-chk')||e.target.closest('.ev-del')||e.target.closest('.rz'))return;
+        const id=card.dataset.id;if(!id)return;
+        const touch=e.touches[0];
+        const rect=card.getBoundingClientRect();
+        offY=touch.clientY-rect.top;
+        lpTimer=setTimeout(function(){
+            lpTimer=null;
+            dragEv=evs.find(x=>x.id===id);
+            dragCard=card;
+            if(!dragEv)return;
+            // Visual feedback
+            card.style.opacity='.4';
+            ghostEl=document.createElement('div');
+            ghostEl.className='ev ghost c-'+dragEv.cat;
+            ghostEl.style.position='fixed';ghostEl.style.zIndex='9000';ghostEl.style.pointerEvents='none';
+            ghostEl.style.width=rect.width+'px';
+            ghostEl.style.height=rect.height+'px';
+            ghostEl.style.left=rect.left+'px';
+            ghostEl.style.top=rect.top+'px';
+            ghostEl.style.opacity='.85';ghostEl.style.boxShadow='0 8px 24px rgba(0,0,0,.25)';
+            ghostEl.innerHTML='<span class="ev-n">'+esc(dragEv.title)+'</span>';
+            document.body.appendChild(ghostEl);
+            if(navigator.vibrate)navigator.vibrate(30);
+        },500);
+    },{passive:true});
+
+    grid.addEventListener('touchmove',function(e){
+        if(lpTimer&&!dragEv){
+            const t=e.touches[0];
+            // Cancel long-press if moved too much
+            clearTimeout(lpTimer);lpTimer=null;return;
+        }
+        if(!dragEv||!ghostEl)return;
+        e.preventDefault();
+        const t=e.touches[0];
+        ghostEl.style.top=(t.clientY-offY)+'px';
+
+        // Find target column
+        let targetCol=null;
+        document.querySelectorAll('.dc').forEach(c=>{
+            const r=c.getBoundingClientRect();
+            if(t.clientX>=r.left&&t.clientX<=r.right)targetCol=c;
+        });
+        // Show snap indicator
+        clearPreview();
+        if(targetCol){
+            const gbEl=$('gb');if(!gbEl)return;
+            const gbR=gbEl.getBoundingClientRect();
+            const evSlots=Math.max(1,Math.round((dragEv.duration||30)/SM));
+            const cardTopInGrid=t.clientY-offY-gbR.top-8;
+            const snapSlot=Math.max(0,Math.min(SLOTS-evSlots,Math.round(cardTopInGrid/SH)));
+            preview=document.createElement('div');
+            preview.className='ev snap-preview c-'+dragEv.cat;
+            preview.style.top=(snapSlot*SH)+'px';
+            preview.style.height=(evSlots*SH-2)+'px';
+            preview.innerHTML='<span class="ev-n">'+esc(s2t(snapSlot))+'</span>';
+            targetCol.appendChild(preview);
+            dragState={target:'grid',date:targetCol.dataset.date,time:s2t(snapSlot)};
+        }
+    },{passive:false});
+
+    grid.addEventListener('touchend',function(e){
+        if(lpTimer){clearTimeout(lpTimer);lpTimer=null}
+        if(!dragEv){return}
+        if(ghostEl){ghostEl.remove();ghostEl=null}
+        if(dragCard){dragCard.style.opacity=''}
+        clearPreview();
+        if(dragState&&dragState.target==='grid'){
+            const dur=dragEv.duration||30;
+            const conflict=checkOverlap(dragState.date,dragState.time,dur,dragEv.id);
+            if(conflict){/* skip, don't move */}
+            else{dragEv.date=dragState.date;dragEv.startTime=dragState.time;save();render()}
+        }
+        dragEv=null;dragCard=null;dragState=null;
+    },{passive:true});
+}
+
 // Dark
 function togDark(){document.body.classList.toggle('dark');lsSet('agenda_dark',document.body.classList.contains('dark')?'1':'0')}
 
@@ -3090,7 +3175,7 @@ $('pinInput').addEventListener('keydown',function(e){if(e.key==='Enter')checkPin
 function initApp(){
     if(localStorage.getItem('agenda_dark')==='1')document.body.classList.add('dark');
     const sv=localStorage.getItem('agenda_view');if(sv)view=sv;
-    processTickler();cleanOldQuick2();load();render();scrollNow();initLasso();initTouch();initMobileScrollSync();initMobileSwipeNav();initSwipeNav();initPullRefresh();
+    processTickler();cleanOldQuick2();load();render();scrollNow();initLasso();initTouch();initMobileScrollSync();initMobileSwipeNav();initSwipeNav();initTouchDrag();initPullRefresh();
     if(localStorage.getItem('agenda_bv')==='1'){
         bvMode=localStorage.getItem('agenda_bvtab')||'kanban';
         openBV();

@@ -683,28 +683,30 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
     .ev-n{font-size:12px;-webkit-line-clamp:2}
     .ev-btns{display:none!important}
     /* Modal quick actions (mobile) */
-    .mod-quick-actions{display:flex;gap:8px;margin-bottom:14px}
-    .mod-qa-btn{flex:1;padding:12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface2);font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;text-align:center;min-height:44px}
-    .mod-qa-done{color:var(--green);border-color:var(--green)}
-    .mod-qa-done:active{background:var(--green);color:#fff}
-    .mod-qa-del{color:var(--red);border-color:var(--red)}
-    .mod-qa-del:active{background:var(--red);color:#fff}
 
     /* --- Backlog cards --- */
     .bl{padding:10px 12px;min-height:48px;border-radius:6px;touch-action:manipulation}
     .bl-n{font-size:13px}
 
-    /* --- Modal: slide-up fullscreen --- */
+    /* --- Modal: slide-up compact --- */
     .mod-bg{align-items:flex-end}
-    .mod{width:100vw;max-width:none;padding:20px 16px;padding-bottom:calc(20px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:modSlideUp .3s cubic-bezier(.32,.72,0,1)}
+    .mod{width:100vw;max-width:none;padding:12px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-radius:18px 18px 0 0;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:modSlideUp .3s cubic-bezier(.32,.72,0,1)}
     @keyframes modSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:none}}
-    .mod-t{font-size:17px;margin-bottom:14px}
-    .fi,.fs,.fta{font-size:16px;padding:12px 14px;border-radius:10px}
-    .btn{padding:12px 18px;font-size:14px;border-radius:10px;min-height:44px}
-    .st-opt{padding:10px 4px;font-size:12px;min-height:44px}
-    .mod-a{flex-wrap:wrap;gap:8px}
-    .mod-r{gap:8px;flex-wrap:wrap}
+    .mod-t{font-size:15px;margin-bottom:8px}
+    .fg{margin-bottom:6px}
+    .fl{font-size:9px;margin-bottom:2px}
+    .fi,.fs{font-size:16px;padding:8px 10px;border-radius:8px}
+    .fta{font-size:16px;padding:6px 10px;border-radius:8px;min-height:36px}
+    .btn{padding:10px 14px;font-size:13px;border-radius:8px;min-height:40px}
+    .st-opt{padding:7px 3px;font-size:11px;min-height:36px}
+    .mod-a{flex-wrap:nowrap;gap:6px;margin-top:10px}
+    .mod-r{gap:6px;flex-wrap:nowrap}
     .fr{flex-direction:column;gap:0}
+    .sub-list{max-height:80px;overflow-y:auto}
+    .sub-add{padding:6px;font-size:12px}
+    .sub-hint{font-size:10px;padding:4px 8px;margin-bottom:4px}
+    .btn-done-m{background:var(--green-bg);color:var(--green);border-color:var(--green);padding:10px 10px;font-size:13px}
+    .btn-done-m:active{background:var(--green);color:#fff}
 
     /* --- Board kanban --- */
     .bv{overflow-y:auto!important;-webkit-overflow-scrolling:touch}
@@ -847,7 +849,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
     .bv-tab{padding:8px 10px;font-size:11px}
     .focus-title{font-size:20px}
     .focus-btn{font-size:14px}
-    .mod{padding:16px 12px}
+    .mod{padding:10px 10px}
+    .mod-t{font-size:14px;margin-bottom:6px}
+    .fg{margin-bottom:4px}
+    .btn{padding:8px 10px;font-size:12px;min-height:36px}
+    .st-opt{padding:6px 2px;font-size:10px;min-height:32px}
     .pin-input{width:200px;font-size:24px;letter-spacing:8px}
     .pin-btn{width:200px}
 }
@@ -1101,6 +1107,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
         </div>
         <div class="mod-a">
             <button class="btn btn-d" id="btnDel" style="display:none" onclick="delEv()">Elimina</button>
+            <button class="btn btn-done-m" id="btnFatto" style="display:none" onclick="toggleDone(editId);closeMod()">Fatto &#10003;</button>
             <div class="mod-r">
                 <button class="btn btn-c" onclick="closeMod()">Annulla</button>
                 <button class="btn btn-s" onclick="saveEv()">Salva</button>
@@ -2550,23 +2557,13 @@ function openMod(id,bl,date,time){
         pickSt('todo');$('btnDel').style.display='none';$('fPr').value='';$('fE').value='';
         modalSubs=[];renderSubs();
     }
-    // Mobile quick actions (Fatto / Elimina) at top of modal
-    let qa=document.getElementById('modQA');
-    if(qa)qa.remove();
-    if(editId&&window.innerWidth<=768){
-        qa=document.createElement('div');qa.id='modQA';qa.className='mod-quick-actions';
-        qa.innerHTML='<button class="mod-qa-btn mod-qa-done" onclick="toggleDone(editId);closeMod()">Fatto &#10003;</button><button class="mod-qa-btn mod-qa-del" onclick="delEv()">Elimina</button>';
-        const mod=$('modBg').querySelector('.mod');
-        const modTitle=$('modT');
-        mod.insertBefore(qa,modTitle);
-    }
+    // Mobile: show/hide "Fatto" button at bottom
+    const btnFatto=$('btnFatto');
+    if(btnFatto){btnFatto.style.display=(editId&&window.innerWidth<=768)?'inline-block':'none'}
     $('modBg').classList.add('on');
     const modEl=$('modBg').querySelector('.mod');
     if(modEl)modEl.scrollTop=0;
-    if(editId&&window.innerWidth<=768){
-        // Don't auto-focus input on mobile edit — it scrolls past the quick action buttons
-        setTimeout(()=>{if(modEl)modEl.scrollTop=0},100);
-    } else {
+    if(window.innerWidth>768){
         setTimeout(()=>$('fT').focus(),80);
     }
 }

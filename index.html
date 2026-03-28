@@ -2561,8 +2561,14 @@ function openMod(id,bl,date,time){
         mod.insertBefore(qa,modTitle);
     }
     $('modBg').classList.add('on');
-    const modEl=$('modBg').querySelector('.mod');if(modEl)modEl.scrollTop=0;
-    setTimeout(()=>$('fT').focus(),80);
+    const modEl=$('modBg').querySelector('.mod');
+    if(modEl)modEl.scrollTop=0;
+    if(editId&&window.innerWidth<=768){
+        // Don't auto-focus input on mobile edit — it scrolls past the quick action buttons
+        setTimeout(()=>{if(modEl)modEl.scrollTop=0},100);
+    } else {
+        setTimeout(()=>$('fT').focus(),80);
+    }
 }
 function closeMod(e){if(e&&e.target!==e.currentTarget)return;$('modBg').classList.remove('on');editId=null;if(reopenBV){reopenBV=false;openBV()}}
 function saveEv(){

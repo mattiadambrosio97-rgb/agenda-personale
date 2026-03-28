@@ -2592,11 +2592,6 @@ function saveEv(){
     }
     if(editId){const ev=evs.find(x=>x.id===editId);if(ev)Object.assign(ev,d)}else evs.push({id:uid(),...d});
     save();
-    // Overload warning
-    if(d.date&&d.startTime){
-        const dayTotal=evs.filter(e=>e.date===d.date&&e.startTime).reduce((a,e)=>a+(e.duration||30),0);
-        if(dayTotal>360){const h=Math.round(dayTotal/60*10)/10;alert(`Attenzione: ${h}h schedulate il ${d.date}.\n\nRicorda: il calendario è terreno sacro. Inserisci solo appuntamenti reali e scadenze inderogabili, non tutta la to-do list.`)}
-    }
     closeMod();render();
 }
 function delEv(){if(!editId)return;evs=evs.filter(x=>x.id!==editId);save();closeMod();render()}

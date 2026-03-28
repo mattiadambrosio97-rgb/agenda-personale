@@ -879,8 +879,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 </style>
 </head>
 <body>
-<button class="refresh-fab" id="refreshFab" onclick="location.reload()" title="Ricarica">&#x21bb;</button>
-
 <!-- PIN LOCK SCREEN -->
 <div class="pin-lock" id="pinLock">
     <h1>Agenda</h1>
@@ -930,6 +928,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
         </div>
         <button class="thm" onclick="togDark()" title="Dark mode"></button>
         <span class="sync-dot" id="syncDot" title="Sync"></span>
+        <button class="ib" id="refreshBtn" onclick="location.reload()" title="Ricarica" style="font-size:15px;display:none">&#x21bb;</button>
     </div>
 </div>
 
@@ -2860,8 +2859,8 @@ function initTouch(){
 // Pull-to-refresh for PWA (no F5 on iOS standalone)
 function initPullRefresh(){
     const isPwa=navigator.standalone||window.matchMedia('(display-mode:standalone)').matches;
-    const fab=document.getElementById('refreshFab');
-    if(fab&&isPwa)fab.classList.add('pwa-active');
+    const btn=document.getElementById('refreshBtn');
+    if(btn&&isPwa)btn.style.display='';
     // Block iOS native pull-to-refresh
     document.body.style.overscrollBehavior='none';
     document.documentElement.style.overscrollBehavior='none';

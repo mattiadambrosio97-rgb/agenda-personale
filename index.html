@@ -3037,6 +3037,15 @@ function initTouchDrag(){
         e.preventDefault();
         const t=e.touches[0];
 
+        // Auto-scroll when near edges
+        const gsEl=$('gs');
+        if(gsEl){
+            const gsR=gsEl.getBoundingClientRect();
+            const edgeZone=60;
+            if(t.clientY>gsR.bottom-edgeZone){gsEl.scrollTop+=8}
+            else if(t.clientY<gsR.top+edgeZone){gsEl.scrollTop-=8}
+        }
+
         // Find target column under finger
         let targetCol=null;
         document.querySelectorAll('.dc').forEach(c=>{

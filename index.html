@@ -681,8 +681,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
     /* --- Event cards --- */
     .ev{min-height:44px;padding:5px 8px;border-radius:6px;touch-action:manipulation;-webkit-user-select:none;user-select:none}
     .ev-n{font-size:12px;-webkit-line-clamp:2}
-    .ev-btns{opacity:1;gap:4px}
-    .ev-chk,.ev-del{width:34px;height:34px;font-size:20px;border-radius:8px}
+    .ev-btns{display:none!important}
+    /* Modal quick actions (mobile) */
+    .mod-quick-actions{display:flex;gap:8px;margin-bottom:14px}
+    .mod-qa-btn{flex:1;padding:12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface2);font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;text-align:center;min-height:44px}
+    .mod-qa-done{color:var(--green);border-color:var(--green)}
+    .mod-qa-done:active{background:var(--green);color:#fff}
+    .mod-qa-del{color:var(--red);border-color:var(--red)}
+    .mod-qa-del:active{background:var(--red);color:#fff}
 
     /* --- Backlog cards --- */
     .bl{padding:10px 12px;min-height:48px;border-radius:6px;touch-action:manipulation}
@@ -2544,6 +2550,16 @@ function openMod(id,bl,date,time){
         pickSt('todo');$('btnDel').style.display='none';$('fPr').value='';$('fE').value='';
         modalSubs=[];renderSubs();
     }
+    // Mobile quick actions (Fatto / Elimina) at top of modal
+    let qa=document.getElementById('modQA');
+    if(qa)qa.remove();
+    if(editId&&window.innerWidth<=768){
+        qa=document.createElement('div');qa.id='modQA';qa.className='mod-quick-actions';
+        qa.innerHTML='<button class="mod-qa-btn mod-qa-done" onclick="toggleDone(editId);closeMod()">Fatto &#10003;</button><button class="mod-qa-btn mod-qa-del" onclick="delEv()">Elimina</button>';
+        const mod=$('modBg').querySelector('.mod');
+        const modTitle=$('modT');
+        mod.insertBefore(qa,modTitle);
+    }
     $('modBg').classList.add('on');
     const modEl=$('modBg').querySelector('.mod');if(modEl)modEl.scrollTop=0;
     setTimeout(()=>$('fT').focus(),80);
@@ -2976,7 +2992,7 @@ function initSwipeNav(){
 function initTouchDrag(){
     if(!('ontouchstart' in window))return;
     const grid=$('gv');if(!grid)return;
-    let lpTimer=null,dragEv=null,dragCard=null,ghostEl=null,offY=0;
+    let lpTimer=null,dragEv=null,dragCard=null,ghostEl=null,offY=0,offX=0;
 
     grid.addEventListener('touchstart',function(e){
         const card=e.target.closest('.ev:not(.ghost)');
@@ -2984,7 +3000,7 @@ function initTouchDrag(){
         const id=card.dataset.id;if(!id)return;
         const touch=e.touches[0];
         const rect=card.getBoundingClientRect();
-        offY=touch.clientY-rect.top;
+        offX=touch.clientX-rect.left;offY=touch.clientY-rect.top;
         lpTimer=setTimeout(function(){
             lpTimer=null;
             dragEv=evs.find(x=>x.id===id);
@@ -2994,12 +3010,11 @@ function initTouchDrag(){
             card.style.opacity='.4';
             ghostEl=document.createElement('div');
             ghostEl.className='ev ghost c-'+dragEv.cat;
-            ghostEl.style.position='fixed';ghostEl.style.zIndex='9000';ghostEl.style.pointerEvents='none';
+            ghostEl.style.cssText='position:fixed;z-index:9000;pointer-events:none;opacity:.85;box-shadow:0 8px 24px rgba(0,0,0,.25);border-radius:6px;transition:width .15s,height .15s;border:2px solid var(--accent)';
             ghostEl.style.width=rect.width+'px';
             ghostEl.style.height=rect.height+'px';
             ghostEl.style.left=rect.left+'px';
             ghostEl.style.top=rect.top+'px';
-            ghostEl.style.opacity='.85';ghostEl.style.boxShadow='0 8px 24px rgba(0,0,0,.25)';
             ghostEl.innerHTML='<span class="ev-n">'+esc(dragEv.title)+'</span>';
             document.body.appendChild(ghostEl);
             if(navigator.vibrate)navigator.vibrate(30);
@@ -3015,22 +3030,35 @@ function initTouchDrag(){
         if(!dragEv||!ghostEl)return;
         e.preventDefault();
         const t=e.touches[0];
-        ghostEl.style.top=(t.clientY-offY)+'px';
 
-        // Find target column
+        // Find target column under finger
         let targetCol=null;
         document.querySelectorAll('.dc').forEach(c=>{
             const r=c.getBoundingClientRect();
             if(t.clientX>=r.left&&t.clientX<=r.right)targetCol=c;
         });
-        // Show snap indicator
+
+        const gbEl=$('gb');if(!gbEl)return;
+        const gbR=gbEl.getBoundingClientRect();
+        const evSlots=Math.max(1,Math.round((dragEv.duration||30)/SM));
+        const cardTopInGrid=t.clientY-offY-gbR.top-8;
+        const snapSlot=Math.max(0,Math.min(SLOTS-evSlots,Math.round(cardTopInGrid/SH)));
+
+        // Ghost follows finger smoothly, snaps X to column
+        if(targetCol){
+            const colR=targetCol.getBoundingClientRect();
+            ghostEl.style.left=(colR.left+2)+'px';
+            ghostEl.style.width=(colR.width-4)+'px';
+            ghostEl.style.top=(gbR.top+8+snapSlot*SH)+'px';
+            ghostEl.style.height=(evSlots*SH-2)+'px';
+        } else {
+            ghostEl.style.left=(t.clientX-offX)+'px';
+            ghostEl.style.top=(t.clientY-offY)+'px';
+        }
+
+        // Show snap preview in column
         clearPreview();
         if(targetCol){
-            const gbEl=$('gb');if(!gbEl)return;
-            const gbR=gbEl.getBoundingClientRect();
-            const evSlots=Math.max(1,Math.round((dragEv.duration||30)/SM));
-            const cardTopInGrid=t.clientY-offY-gbR.top-8;
-            const snapSlot=Math.max(0,Math.min(SLOTS-evSlots,Math.round(cardTopInGrid/SH)));
             preview=document.createElement('div');
             preview.className='ev snap-preview c-'+dragEv.cat;
             preview.style.top=(snapSlot*SH)+'px';
@@ -3038,6 +3066,8 @@ function initTouchDrag(){
             preview.innerHTML='<span class="ev-n">'+esc(s2t(snapSlot))+'</span>';
             targetCol.appendChild(preview);
             dragState={target:'grid',date:targetCol.dataset.date,time:s2t(snapSlot)};
+        } else {
+            dragState=null;
         }
     },{passive:false});
 

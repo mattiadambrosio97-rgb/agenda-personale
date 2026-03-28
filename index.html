@@ -14,6 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
+html,body{overscroll-behavior:none;-webkit-overflow-scrolling:touch}
 :root{
 --font:'DM Sans',system-ui,sans-serif;
 --bg:#F5F4F1;--surface:#fff;--surface2:#FAFAF8;--surface-hover:#F8F7F4;
@@ -2861,28 +2862,9 @@ function initPullRefresh(){
     const isPwa=navigator.standalone||window.matchMedia('(display-mode:standalone)').matches;
     const fab=document.getElementById('refreshFab');
     if(fab&&isPwa)fab.classList.add('pwa-active');
-    if(!('ontouchstart' in window)||!isPwa)return;
-    const ind=document.createElement('div');
-    ind.className='ptr-indicator';ind.textContent='\u21bb';
-    document.body.appendChild(ind);
-    let startY=0,pulling=false;
-    document.addEventListener('touchstart',function(e){
-        if(window.scrollY===0&&document.scrollingElement.scrollTop===0){startY=e.touches[0].clientY;pulling=true}
-    },{passive:true});
-    document.addEventListener('touchmove',function(e){
-        if(!pulling)return;
-        const dy=e.touches[0].clientY-startY;
-        if(dy>60)ind.classList.add('pulling');
-        else ind.classList.remove('pulling');
-    },{passive:true});
-    document.addEventListener('touchend',function(){
-        if(ind.classList.contains('pulling')){
-            ind.classList.remove('pulling');
-            ind.classList.add('refreshing');
-            setTimeout(function(){location.reload()},400);
-        }
-        pulling=false;
-    });
+    // Block iOS native pull-to-refresh
+    document.body.style.overscrollBehavior='none';
+    document.documentElement.style.overscrollBehavior='none';
 }
 
 // Dark

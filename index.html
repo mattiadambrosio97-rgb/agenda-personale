@@ -701,12 +701,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
     .fr{flex-direction:column;gap:0}
 
     /* --- Board kanban --- */
-    .bv-body{flex-direction:column!important;overflow-y:auto!important;padding:10px!important;gap:10px!important;-webkit-overflow-scrolling:touch}
-    .bv-top{padding:10px 12px;gap:6px;flex-wrap:wrap;padding-top:calc(10px + env(safe-area-inset-top))}
-    .bv-tabs{margin-left:0;flex-wrap:wrap;gap:4px}
-    .bv-tab{padding:10px 14px;border-radius:8px;min-height:40px}
-    .bv-close{width:44px;height:44px;font-size:20px;border-radius:10px}
-    .kb-col{min-height:auto;max-height:45vh;border-radius:14px}
+    .bv{overflow:auto;-webkit-overflow-scrolling:touch}
+    .bv-body{flex-direction:column!important;overflow-y:visible!important;overflow:visible!important;padding:10px!important;gap:12px!important;flex:none!important}
+    .bv-top{padding:10px 12px;gap:6px;flex-wrap:nowrap;padding-top:calc(10px + env(safe-area-inset-top));overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .bv-tabs{margin-left:0;flex-wrap:nowrap;gap:4px;flex-shrink:0}
+    .bv-tab{padding:8px 12px;border-radius:8px;min-height:40px;white-space:nowrap}
+    .bv-close{width:44px;height:44px;font-size:20px;border-radius:10px;flex-shrink:0}
+    .kb-col{min-height:auto;max-height:none;border-radius:14px}
+    .kb-body{max-height:none;overflow:visible}
     .kb-card{padding:14px 14px;min-height:48px;border-radius:10px}
     .kb-card .kb-txt{font-size:14px}
     .kb-card-del{width:38px;height:38px;font-size:24px;opacity:.7}
@@ -1953,6 +1955,20 @@ function renderKBInbox(){
         d.addEventListener('dragstart',e=>{kbDrag={type:'inbox',id:item.id};d.classList.add('dragging')});
         d.addEventListener('dragend',()=>d.classList.remove('dragging'));
         d.addEventListener('dblclick',e=>{e.stopPropagation();editInboxItem(item.id)});
+        // Long-press to move to backlog (mobile)
+        let lpTimer=null;
+        d.addEventListener('touchstart',function(e){
+            lpTimer=setTimeout(function(){
+                lpTimer=null;
+                d.style.transition='transform .2s,opacity .2s';d.style.transform='scale(.9)';d.style.opacity='.5';
+                setTimeout(function(){
+                    inboxToBacklog(item.id);
+                    d.style.transform='';d.style.opacity='';d.style.transition='';
+                },200);
+            },600);
+        },{passive:true});
+        d.addEventListener('touchmove',function(){if(lpTimer){clearTimeout(lpTimer);lpTimer=null}},{passive:true});
+        d.addEventListener('touchend',function(){if(lpTimer){clearTimeout(lpTimer);lpTimer=null}},{passive:true});
         el.appendChild(d);
     });
 }
@@ -2342,6 +2358,13 @@ function clarifyArchive(){
 function inboxToTask(id){inboxClarify(id)}
 function inboxDel(id){saveInbox(loadInbox().filter(x=>x.id!==id));renderBV()}
 function editInboxItem(id){const items=loadInbox();const item=items.find(x=>x.id===id);if(!item)return;const nv=prompt('Modifica testo:',item.text);if(nv===null)return;if(!nv.trim()){saveInbox(items.filter(x=>x.id!==id))}else{item.text=nv.trim();saveInbox(items)}renderBV()}
+function inboxToBacklog(id){
+    const items=loadInbox();const item=items.find(x=>x.id===id);if(!item)return;
+    clarifyItemId=id;clarifyTarget='backlog';
+    $('clarifyText').textContent='"'+item.text+'"';
+    $('clarifyS1').style.display='block';$('clarifyS2').style.display='none';
+    $('clarifyOv').classList.add('on');
+}
 function kbDelInbox(id){saveInbox(loadInbox().filter(x=>x.id!==id));renderBV()}
 function kbDelBacklog(id){evs=evs.filter(x=>x.id!==id);save();renderBV();render()}
 function kbDelSomeday(id){saveSomeday(loadSomeday().filter(x=>x.id!==id));renderBV()}
@@ -2363,8 +2386,17 @@ function qiKey(e){
 function renderQIList(){
     const list=$('qiList');const items=loadInbox();
     if(!items.length){list.innerHTML='';return}
-    list.innerHTML=items.slice(0,5).map(i=>`<div class="qi-item"><span>${i.text}</span></div>`).join('');
+    list.innerHTML=items.slice(0,5).map(i=>`<div class="qi-item" data-inbox-id="${i.id}"><span>${esc(i.text)}</span><span style="font-size:9px;color:var(--text-m)">tieni premuto → backlog</span></div>`).join('');
     if(items.length>5)list.innerHTML+=`<div class="qi-item-cnt">+${items.length-5} altre idee</div>`;
+    // Long-press on idea items
+    list.querySelectorAll('.qi-item[data-inbox-id]').forEach(el=>{
+        let lp=null;
+        el.addEventListener('touchstart',function(){
+            lp=setTimeout(function(){lp=null;el.style.opacity='.4';setTimeout(function(){inboxToBacklog(Number(el.dataset.inboxId));el.style.opacity='';renderQIList()},200)},600);
+        },{passive:true});
+        el.addEventListener('touchmove',function(){if(lp){clearTimeout(lp);lp=null}},{passive:true});
+        el.addEventListener('touchend',function(){if(lp){clearTimeout(lp);lp=null}},{passive:true});
+    });
 }
 document.addEventListener('click',e=>{
     if(!e.target.closest('.qi-wrap')){$('qiPop').classList.remove('on');$('backupPop').classList.remove('on')}

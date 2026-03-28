@@ -620,7 +620,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
     .ib{width:36px;height:36px;border-radius:8px;font-size:14px}
     .nav-tb{padding:6px 14px;font-size:12px;border-radius:8px;min-height:32px;font-weight:800}
 
-    /* Hide everything except nav arrows + Oggi + range */
+    /* Hide everything except nav arrows + range */
     .hdr .qi-wrap{display:none}
     .hdr .thm{display:none}
     .hdr .sync-dot{display:none}
@@ -630,6 +630,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
     .hdr .nav-vb{display:none}
     .hdr .focus-dot{display:none}
     .hdr .ab{display:none}
+    .hdr .nav-tb{display:none}
     .hdr .ib-day{display:none!important}
 
     /* Mobile toolbar visible */
@@ -906,7 +907,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
         <button class="ib-day" onclick="navPD()" title="-1 giorno">&#10094;</button>
         <button class="ib" onclick="navP()" title="Indietro">&#10094;&#10094;</button>
         <button class="nav-tb" onclick="navT()">Oggi</button>
-        <span class="nav-range" id="navR"></span>
+        <span class="nav-range" id="navR" onclick="navT()" style="cursor:pointer"></span>
         <button class="ib" onclick="navN()" title="Avanti">&#10095;&#10095;</button>
         <button class="ib-day" onclick="navND()" title="+1 giorno">&#10095;</button>
         <div class="hdr-sep"></div>

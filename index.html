@@ -165,6 +165,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 .ev .rz-top:hover{background:linear-gradient(180deg,rgba(0,0,0,.08),transparent)}
 .ev-btns{position:absolute;bottom:3px;right:4px;display:flex;gap:8px;opacity:0;transition:opacity .12s}
 .ev:hover .ev-btns{opacity:1}
+.ev.resizing .ev-btns{opacity:0!important}
 .ev.s-done .ev-btns{opacity:.6}
 .ev-chk,.ev-del{width:24px;height:24px;border-radius:5px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;opacity:.7;transition:all .12s;padding:0;font-family:var(--font);line-height:1}
 .ev-del{color:var(--red)}
@@ -1505,11 +1506,13 @@ function rGrid(){
             card.querySelector('.rz').addEventListener('mousedown',e=>{
                 e.preventDefault();e.stopPropagation();
                 rzD={id:ev.id,y0:e.clientY,dur0:ev.duration,h0:card.offsetHeight,card,dir:'bottom'};
+                card.classList.add('resizing');
                 document.addEventListener('mousemove',onRz);document.addEventListener('mouseup',endRz);
             });
             card.querySelector('.rz-top').addEventListener('mousedown',e=>{
                 e.preventDefault();e.stopPropagation();
                 rzD={id:ev.id,y0:e.clientY,dur0:ev.duration,h0:card.offsetHeight,top0:card.offsetTop,card,dir:'top',startSlot:t2s(ev.startTime)};
+                card.classList.add('resizing');
                 document.addEventListener('mousemove',onRz);document.addEventListener('mouseup',endRz);
             });
             col.appendChild(card);
@@ -1933,6 +1936,7 @@ function onRz(e){
 }
 function endRz(){
     if(dragScrollRAF){cancelAnimationFrame(dragScrollRAF);dragScrollRAF=null}
+    if(rzD&&rzD.card)rzD.card.classList.remove('resizing');
     document.removeEventListener('mousemove',onRz);document.removeEventListener('mouseup',endRz);
     if(rzD&&(rzD._dur||rzD._newStart)){
         const ev=evs.find(x=>x.id===rzD.id);

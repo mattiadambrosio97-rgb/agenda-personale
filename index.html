@@ -1398,10 +1398,10 @@ function save(){lsSet(LS,JSON.stringify(evs))}
 // Overlap check: returns conflicting event or null
 function checkOverlap(date,startTime,duration,excludeId){
     if(!date||!startTime)return null;
-    const s1=t2s(startTime),e1=s1+Math.round(duration/SM);
+    const s1=t2s(startTime),e1=s1+duration/SM;
     return evs.find(ev=>{
         if(ev.id===excludeId||ev.date!==date||!ev.startTime)return false;
-        const s2=t2s(ev.startTime),e2=s2+Math.round((ev.duration||30)/SM);
+        const s2=t2s(ev.startTime),e2=s2+(ev.duration||30)/SM;
         return s1<e2&&e1>s2;
     })||null;
 }
@@ -1890,7 +1890,7 @@ function startDrag(e,id,srcEl){
             else if(dragState.target==='grid'){
                 const dur=ev.duration||30;
                 const conflict=checkOverlap(dragState.date,dragState.time,dur,ev.id);
-                if(conflict){alert(`Slot occupato da "${conflict.title}" (${conflict.startTime}–${s2t(t2s(conflict.startTime)+Math.round(conflict.duration/SM))})`);render()}
+                if(conflict){alert(`Slot occupato da "${conflict.title}" (${conflict.startTime}–${s2t(t2s(conflict.startTime)+(conflict.duration||30)/SM)})`);render()}
                 else{ev.date=dragState.date;ev.startTime=dragState.time;if(!ev.duration)ev.duration=30;save();render()}
             }
         }
@@ -2874,7 +2874,7 @@ function saveEv(){
     const excId=editId||null;
     if(d.date&&d.startTime){
         const conflict=checkOverlap(d.date,d.startTime,d.duration,excId);
-        if(conflict){alert(`Slot occupato da "${conflict.title}" (${conflict.startTime}–${s2t(t2s(conflict.startTime)+Math.round(conflict.duration/SM))})`);return}
+        if(conflict){alert(`Slot occupato da "${conflict.title}" (${conflict.startTime}–${s2t(t2s(conflict.startTime)+(conflict.duration||30)/SM)})`);return}
     }
     if(editId){const ev=evs.find(x=>x.id===editId);if(ev)Object.assign(ev,d)}else evs.push({id:uid(),...d});
     save();

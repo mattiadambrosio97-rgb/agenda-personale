@@ -1478,14 +1478,14 @@ function rGrid(){
             const card=document.createElement('div');
             const st=ev.status||'todo';
             const nowT=new Date();const nowTime=String(nowT.getHours()).padStart(2,'0')+':'+String(nowT.getMinutes()).padStart(2,'0');
-            const endSlot=t2s(ev.startTime)+Math.ceil(dur/SM);
+            const endSlot=t2s(ev.startTime)+dur/SM;
             const evEnd=s2t(endSlot);
             const isOverdue=st!=='done'&&(ev.date<today||(ev.date===today&&evEnd<=nowTime));
             card.className='ev c-'+ev.cat+(dur<=20?' mini':slots>=3?' tall':'')+(st==='done'?' s-done':'')+(st==='blocked'?' s-blocked':'')+(isOverdue?' overdue':'');
             card.dataset.id=ev.id;
             card.style.top=(si*SH+2)+'px';
             card.style.height=cardH+'px';
-            const endT=s2t(t2s(ev.startTime)+Math.ceil(dur/SM));
+            const endT=s2t(t2s(ev.startTime)+dur/SM);
             const stDot=st!=='todo'?`<span class="ev-st st-${st}"></span>`:'';
             const chkMark=st==='done'?'&#10003;':'';
             const subs=ev.subs||[];const subDone=subs.filter(s=>s.done).length;const subTot=subs.length;

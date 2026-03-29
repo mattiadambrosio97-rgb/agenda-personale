@@ -148,10 +148,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 .ev.s-done{opacity:.35}
 .ev.s-done .ev-n{text-decoration:line-through}
 .ev.s-blocked{opacity:.7}
-.ev-dl{font-size:7px;font-weight:800;padding:1px 4px;border-radius:3px;line-height:1.2;display:inline-block}
-.dl-ok{background:var(--green);color:#fff}
-.dl-warn{background:var(--orange);color:#fff}
-.dl-urgent{background:var(--red);color:#fff;animation:pulse 1.8s ease infinite}
 /* Backlog status */
 .bl.s-done{opacity:.35}
 .bl.s-done .bl-n{text-decoration:line-through}
@@ -1486,9 +1482,7 @@ function rGrid(){
             const chkMark=st==='done'?'&#10003;':'';
             const subs=ev.subs||[];const subDone=subs.filter(s=>s.done).length;const subTot=subs.length;
             const subHtml=subTot?`<span class="ev-sub"><span class="ev-sub-bar"><span class="ev-sub-fill" style="width:${subTot?subDone/subTot*100:0}%"></span></span>${subDone}/${subTot}</span>`:'';
-            let dlHtml='';
-            if(ev.deadline&&st!=='done'){const now=new Date();now.setHours(0,0,0,0);const dl=new Date(ev.deadline+'T00:00:00');const diff=Math.ceil((dl-now)/(864e5));const cls=diff<=1?'dl-urgent':diff<=3?'dl-warn':'dl-ok';const lbl=diff<0?`${Math.abs(diff)}g SCADUTA`:diff===0?'OGGI':diff===1?'DOMANI':`${diff}g`;dlHtml=`<span class="ev-dl ${cls}">\u23F0 ${lbl}</span>`}
-            card.innerHTML=`<div class="rz-top"></div>${stDot}<span class="ev-t">${ev.startTime} – ${endT}</span><span class="ev-n">${esc(ev.title)}</span>${dlHtml}<span class="ev-c">${CL[ev.cat]||ev.cat}</span>${subHtml}<div class="ev-btns"><button class="ev-del" data-id="${ev.id}">&times;</button><button class="ev-chk" data-id="${ev.id}">&#10003;</button></div><div class="rz"></div>`;
+            card.innerHTML=`<div class="rz-top"></div>${stDot}<span class="ev-t">${ev.startTime} – ${endT}</span><span class="ev-n">${esc(ev.title)}</span><span class="ev-c">${CL[ev.cat]||ev.cat}</span>${subHtml}<div class="ev-btns"><button class="ev-del" data-id="${ev.id}">&times;</button><button class="ev-chk" data-id="${ev.id}">&#10003;</button></div><div class="rz"></div>`;
             card.addEventListener('mousedown',e=>{if(e.target.classList.contains('rz')||e.target.classList.contains('rz-top')||e.target.classList.contains('ev-chk')||e.target.classList.contains('ev-del')||e.button!==0)return;startDrag(e,ev.id,card)});
             card.addEventListener('click',e=>{
                 if(e.target.classList.contains('ev-del')){e.stopPropagation();quickDel(ev.id);return}
@@ -1563,9 +1557,7 @@ function rBL(){
         const st=ev.status||'todo';
         const c=document.createElement('div');c.className='bl c-'+ev.cat+(st==='done'?' s-done':'')+(st==='blocked'?' s-blocked':'');c.dataset.id=ev.id;
         const stDot=st!=='todo'?`<span class="bl-st st-${st}"></span>`:'';
-        let blDl='';
-        if(ev.deadline&&st!=='done'){const now=new Date();now.setHours(0,0,0,0);const dl=new Date(ev.deadline+'T00:00:00');const diff=Math.ceil((dl-now)/(864e5));const cls=diff<=1?'dl-urgent':diff<=3?'dl-warn':'dl-ok';const lbl=diff<0?`${Math.abs(diff)}g SCADUTA`:diff===0?'OGGI':diff===1?'DOMANI':`${diff}g`;blDl=`<span class="ev-dl ${cls}">\u23F0 ${lbl}</span>`}
-        c.innerHTML=`<div class="bl-n">${stDot}${esc(ev.title)}</div>${blDl}<div class="bl-m"><span class="bl-tg t-${ev.cat}">${CL[ev.cat]||ev.cat}</span><span class="bl-d">${ev.duration||30}min</span></div>`;
+        c.innerHTML=`<div class="bl-n">${stDot}${esc(ev.title)}</div><div class="bl-m"><span class="bl-tg t-${ev.cat}">${CL[ev.cat]||ev.cat}</span><span class="bl-d">${ev.duration||30}min</span></div>`;
         c.addEventListener('mousedown',e=>{if(e.button!==0)return;startDrag(e,ev.id,c)});
         c.addEventListener('click',()=>{if(!didDrag)openMod(ev.id)});
         list.appendChild(c);

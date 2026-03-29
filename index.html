@@ -1853,11 +1853,14 @@ function startDrag(e,id,srcEl){
         const mouseInGrid=e2.clientY-gbR.top-8; // -8 for padding-top
         // Where the TOP of the card would be = mouseInGrid - offY
         const cardTopInGrid=mouseInGrid-offY;
-        const snapSlot=Math.max(0,Math.min(SLOTS-evSlots,Math.round(cardTopInGrid/SH)));
+        const halfSlot=SH/2; // 15 min
+        const snapHalf=Math.max(0,Math.min(SLOTS*2-1,Math.round(cardTopInGrid/halfSlot)));
+        const snapSlot=snapHalf/2;
         const snapTime=s2t(snapSlot);
+        const snapPx=snapHalf*halfSlot;
 
         // Snap ghost exactly onto the slot in the target column
-        const slotScreenY=gbR.top+8+snapSlot*SH; // +8 for padding
+        const slotScreenY=gbR.top+8+snapPx; // +8 for padding
         ghost.style.left=(colR.left+2)+'px';
         ghost.style.width=(colR.width-4)+'px';
         ghost.style.top=slotScreenY+'px';
@@ -1866,7 +1869,7 @@ function startDrag(e,id,srcEl){
         // Preview outline in column
         preview=document.createElement('div');
         preview.className='ev snap-preview c-'+ev.cat;
-        preview.style.top=(snapSlot*SH)+'px';
+        preview.style.top=snapPx+'px';
         preview.style.height=(evSlots*SH-2)+'px';
         preview.innerHTML=`<span class="ev-n">${esc(snapTime)}</span>`;
         targetCol.appendChild(preview);

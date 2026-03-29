@@ -1467,17 +1467,21 @@ function rGrid(){
         const dayEvs=evs.filter(e=>e.date===dStr&&e.startTime).sort((a,b)=>a.startTime.localeCompare(b.startTime));
         dayEvs.forEach(ev=>{
             const si=t2s(ev.startTime);
-            const slots=Math.max(1,Math.round(ev.duration/SM));
+            const dur=ev.duration||30;
+            const pxPerMin=SH/SM;
+            const cardH=Math.max(pxPerMin*10,dur*pxPerMin-6);
+            const slots=Math.max(1,Math.round(dur/SM));
             const card=document.createElement('div');
             const st=ev.status||'todo';
             const nowT=new Date();const nowTime=String(nowT.getHours()).padStart(2,'0')+':'+String(nowT.getMinutes()).padStart(2,'0');
-            const evEnd=s2t(t2s(ev.startTime)+Math.max(1,Math.round((ev.duration||30)/SM)));
+            const endSlot=t2s(ev.startTime)+Math.ceil(dur/SM);
+            const evEnd=s2t(endSlot);
             const isOverdue=st!=='done'&&(ev.date<today||(ev.date===today&&evEnd<=nowTime));
-            card.className='ev c-'+ev.cat+(slots<=1?' mini':slots>=3?' tall':'')+(st==='done'?' s-done':'')+(st==='blocked'?' s-blocked':'')+(isOverdue?' overdue':'');
+            card.className='ev c-'+ev.cat+(dur<=15?' mini':slots>=3?' tall':'')+(st==='done'?' s-done':'')+(st==='blocked'?' s-blocked':'')+(isOverdue?' overdue':'');
             card.dataset.id=ev.id;
             card.style.top=(si*SH+2)+'px';
-            card.style.height=(slots*SH-6)+'px';
-            const endT=s2t(si+slots);
+            card.style.height=cardH+'px';
+            const endT=s2t(t2s(ev.startTime)+Math.ceil(dur/SM));
             const stDot=st!=='todo'?`<span class="ev-st st-${st}"></span>`:'';
             const chkMark=st==='done'?'&#10003;':'';
             const subs=ev.subs||[];const subDone=subs.filter(s=>s.done).length;const subTot=subs.length;
@@ -1899,19 +1903,21 @@ function onRz(e){
     dragLastMouseY=e.clientY;
     if(!dragScrollRAF){dragScrollRAF=requestAnimationFrame(dragAutoScroll)}
     const dy=e.clientY-rzD.y0;
+    const pxPer15=SH/2; // 15 min = mezzo slot visivo
     if(rzD.dir==='bottom'){
-        const nh=rzD.h0+dy,sl=Math.max(1,Math.round(nh/SH));
-        rzD.card.style.height=(sl*SH-2)+'px';
-        rzD._dur=sl*SM;
+        const nh=rzD.h0+dy;
+        const units=Math.max(1,Math.round(nh/pxPer15));
+        rzD.card.style.height=(units*pxPer15-2)+'px';
+        rzD._dur=units*15;
     } else {
-        // Top resize: move top up/down, adjust duration
+        // Top resize: snap a 30 min (slot interi) per semplicita
         const slotDelta=Math.round(dy/SH);
         const newStartSlot=Math.max(0,rzD.startSlot+slotDelta);
         const slotsGained=rzD.startSlot-newStartSlot;
-        const newSlots=Math.max(1,Math.round(rzD.dur0/SM)+slotsGained);
+        const newDur=Math.max(15,rzD.dur0+slotsGained*SM);
         rzD.card.style.top=(newStartSlot*SH+2)+'px';
-        rzD.card.style.height=(newSlots*SH-6)+'px';
-        rzD._dur=newSlots*SM;
+        rzD.card.style.height=(newDur/SM*SH-6)+'px';
+        rzD._dur=newDur;
         rzD._newStart=s2t(newStartSlot);
     }
 }

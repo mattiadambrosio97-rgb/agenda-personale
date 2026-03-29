@@ -2512,7 +2512,7 @@ function togAIMenu(){$('aiPop').classList.toggle('on')}
 document.addEventListener('click',e=>{if($('aiPop').classList.contains('on')&&!e.target.closest('#aiPop')&&!e.target.closest('[onclick*="togAIMenu"]'))$('aiPop').classList.remove('on')})
 const AI_PROMPTS={};
 const AI_FB='https://agenda-f3298-default-rtdb.europe-west1.firebasedatabase.app/agenda';
-AI_PROMPTS.recap=`Analizza i dati aggiornati della mia Agenda GTD. Per prima cosa, rileva la tua data di sistema attuale e usala come "Oggi". Usa questa data come punto zero per calcolare tutte le scadenze, gli avvisi e l'orizzonte della prossima settimana.
+AI_PROMPTS.recap=`Analizza i dati aggiornati della mia Agenda GTD. In questo momento in Italia sono le {ORA_ITALIA}. Usa questa data e questo orario come punto zero per calcolare tutte le scadenze, gli avvisi e l'orizzonte della prossima settimana.
 
 STEP 0: RECUPERA I DATI
 Leggi i dati da Firebase con curl (esegui in parallelo):
@@ -2544,7 +2544,7 @@ Dichiara la data che stai utilizzando in cima alla risposta (es: "Recap per il [
 
 AI_PROMPTS.briefing=`REGOLA ZERO (VINCOLO DI REALTA): Il mio sistema GTD si basa sulla fiducia assoluta. E severamente vietato allucinare, inventare, presumere o dedurre task, appuntamenti, scadenze, nomi o note che non siano ESPLICITAMENTE presenti nei dati che ti fornisco. Devi basarti ESCLUSIVAMENTE sulle informazioni documentate nella mia agenda. Se un'informazione o un collegamento manca, NON inventarlo.
 
-Agisci come il mio Chief of Staff. Leggi la tua data di sistema per sapere che giorno e oggi.
+Agisci come il mio Chief of Staff. In questo momento in Italia sono le {ORA_ITALIA}. Usa questa data e questo orario come punto zero per valutare cosa e imminente, in orario o in ritardo.
 
 STEP 0: RECUPERA I DATI
 Leggi i dati da Firebase con curl (esegui in parallelo):
@@ -2575,7 +2575,7 @@ Scegli 3 task dal Backlog (una veloce <= 2 min, una a bassa energia, una di deep
 
 Dichiara la data in cima alla risposta (es: "Briefing per il [Data di oggi]").`;
 
-AI_PROMPTS.recupero=`Agisci come il mio Segretario GTD e assistente al recupero. Leggi la tua data di sistema per sapere che giorno e oggi.
+AI_PROMPTS.recupero=`Agisci come il mio Segretario GTD e assistente al recupero. In questo momento in Italia sono le {ORA_ITALIA}. Usa questa data e questo orario come punto zero.
 
 STEP 0: RECUPERA I DATI
 Leggi i dati da Firebase con curl (esegui in parallelo):
@@ -2607,7 +2607,9 @@ Fermati e aspetta le mie istruzioni. Dopo che ti avro detto cosa fare (es. "Spos
 Hai capito? Se si, scansiona l'agenda, fammi la panoramica e presentami subito il problema numero 1!`;
 
 function copyAIPrompt(key){
-    const text=AI_PROMPTS[key];if(!text)return;
+    let text=AI_PROMPTS[key];if(!text)return;
+    const now=new Date().toLocaleString('it-IT',{timeZone:'Europe/Rome',weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    text=text.replace('{ORA_ITALIA}',now);
     const pop=$('aiPop');
     navigator.clipboard.writeText(text).then(()=>{
         pop.querySelectorAll('.backup-btn').forEach(b=>{if(b.onclick.toString().includes(key)){const orig=b.textContent;b.textContent='Copiato!';b.style.borderColor='var(--green)';b.style.color='var(--green)';setTimeout(()=>{b.textContent=orig;b.style.borderColor='';b.style.color=''},1500)}});

@@ -2509,6 +2509,7 @@ function doSearch(q){
 
 // AI PROMPTS — popup + dizionario prompt
 function togAIMenu(){$('aiPop').classList.toggle('on')}
+document.addEventListener('click',e=>{if($('aiPop').classList.contains('on')&&!e.target.closest('#aiPop')&&!e.target.closest('[onclick*="togAIMenu"]'))$('aiPop').classList.remove('on')})
 const AI_PROMPTS={};
 const AI_FB='https://agenda-f3298-default-rtdb.europe-west1.firebasedatabase.app/agenda';
 AI_PROMPTS.recap=`Analizza i dati aggiornati della mia Agenda GTD. Per prima cosa, rileva la tua data di sistema attuale e usala come "Oggi". Usa questa data come punto zero per calcolare tutte le scadenze, gli avvisi e l'orizzonte della prossima settimana.

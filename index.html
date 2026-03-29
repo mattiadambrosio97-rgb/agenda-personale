@@ -43,7 +43,7 @@ html,body{overscroll-behavior:none;-webkit-overflow-scrolling:touch}
 body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased;padding-top:env(safe-area-inset-top);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
 
 /* HEADER */
-.hdr{display:flex;align-items:center;gap:10px;padding:6px 20px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.hdr{display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
 .focus-dot{width:26px;height:26px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:all .15s;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-right:auto}
 .focus-dot-inner{width:8px;height:8px;border-radius:50%;background:var(--accent);transition:all .15s}
 .focus-dot:hover{border-color:var(--accent);background:var(--accent-soft)}
@@ -314,6 +314,22 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 .bulk-btn.del{color:var(--red);border-color:var(--red-bg)}
 .bulk-btn.del:hover{background:var(--red);color:#fff;border-color:var(--red)}
 .bulk-btn.desel{color:var(--text-m)}
+
+/* PROMPTS IA VIEW */
+.pv{display:none;position:fixed;inset:0;z-index:2500;background:var(--bg);flex-direction:column;overflow:hidden}
+.pv.on{display:flex}
+.pv-body{flex:1;overflow-y:auto;padding:24px 32px}
+.pv-cats{display:flex;flex-wrap:wrap;gap:24px}
+.pv-cat{flex:1;min-width:280px;max-width:400px}
+.pv-cat-title{font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--text-m);margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid var(--border)}
+.pv-card{padding:12px 16px;margin-bottom:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:space-between}
+.pv-card:hover{border-color:var(--accent);background:var(--accent-soft)}
+.pv-card-name{font-size:14px;font-weight:600;color:var(--text)}
+.pv-card-copy{font-size:11px;font-weight:700;color:var(--text-m);padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);transition:all .12s}
+.pv-card:hover .pv-card-copy{border-color:var(--accent);color:var(--accent)}
+.pv-card.copied .pv-card-copy{background:var(--green);color:#fff;border-color:var(--green)}
+.pv-empty{font-size:13px;color:var(--text-m);font-style:italic;padding:8px 0}
+@media(max-width:768px){.pv-body{padding:16px}.pv-cats{flex-direction:column}.pv-cat{max-width:none}}
 
 /* KANBAN VIEW */
 .bv{display:none;position:fixed;inset:0;z-index:2500;background:var(--bg);flex-direction:column;overflow:hidden}
@@ -940,6 +956,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
         <button class="nav-vb" data-v="month" onclick="setV('month')">M</button>
         <div class="hdr-sep"></div>
         <button class="ab" onclick="openBV()" style="background:var(--text);color:var(--bg)">Board</button>
+        <button class="ab" onclick="openPV()" style="background:var(--purple);color:#fff">Prompts IA</button>
         <button class="ib" onclick="startReview()" title="Weekly Review" style="font-size:13px;font-weight:800">R</button>
         <div class="hdr-sep"></div>
         <div class="qi-wrap">
@@ -1003,6 +1020,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
         <div class="mm-item" onclick="startReview();closeMobileMore()"><span class="mm-icon">📊</span><span class="mm-label">Review</span></div>
         <div class="mm-item" onclick="startFocus();closeMobileMore()"><span class="mm-icon">🎯</span><span class="mm-label">Focus</span></div>
         <div class="mm-item" onclick="togDark();closeMobileMore()"><span class="mm-icon">🌙</span><span class="mm-label">Dark</span></div>
+        <div class="mm-item" onclick="openPV();closeMobileMore()"><span class="mm-icon">🧠</span><span class="mm-label">Prompts IA</span></div>
         <div class="mm-item" onclick="copyAIPrompt('recap');closeMobileMore()"><span class="mm-icon">🤖</span><span class="mm-label">AI Recap</span></div>
         <div class="mm-item" onclick="exportBackup();closeMobileMore()"><span class="mm-icon">📥</span><span class="mm-label">Backup</span></div>
         <div class="mm-item" onclick="$('importFile').click();closeMobileMore()"><span class="mm-icon">📤</span><span class="mm-label">Importa</span></div>
@@ -1163,6 +1181,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
         <button class="bv-close" onclick="closeBV()">&times;</button>
     </div>
     <div class="bv-body" id="bvBody"></div>
+</div>
+
+<!-- PROMPTS IA VIEW -->
+<div class="pv" id="pvOv">
+    <div class="bv-top">
+        <span class="bv-title">Prompts IA</span>
+        <button class="bv-close" onclick="closePV()">&times;</button>
+    </div>
+    <div class="pv-body" id="pvBody"></div>
 </div>
 
 <!-- CLARIFY MODAL -->
@@ -1890,6 +1917,52 @@ function processTickler(){
 
 function openBV(){$('bvOv').classList.add('on');lsSet('agenda_bv','1');bvTab(bvMode||'kanban')}
 function closeBV(){$('bvOv').classList.remove('on');lsSet('agenda_bv','0')}
+
+// PROMPTS IA VIEW
+const PV_PROMPTS={
+    'Copywriting':[
+        {name:'Brief Copy Vendita',desc:'Sales page, email, VSL',prompt:'Da completare'},
+        {name:'Revisione Copy',desc:'Checklist 10 punti',prompt:'Da completare'},
+        {name:'Email Sequence',desc:'Sequenza email di vendita',prompt:'Da completare'}
+    ],
+    'Meta Ads':[
+        {name:'Analisi Campagne',desc:'Audit completo Meta Ads',prompt:'Da completare'},
+        {name:'Brief Creativita',desc:'Hook, angoli, formati',prompt:'Da completare'},
+        {name:'Scaling Strategy',desc:'Budget e scaling',prompt:'Da completare'}
+    ],
+    'COO':[
+        {name:'Analisi Operativa',desc:'Processi e workflow',prompt:'Da completare'},
+        {name:'Delega Task',desc:'Brief per esecutore',prompt:'Da completare'},
+        {name:'Report Settimanale',desc:'Recap team e KPI',prompt:'Da completare'}
+    ]
+};
+function openPV(){$('pvOv').classList.add('on');renderPV()}
+function closePV(){$('pvOv').classList.remove('on')}
+function renderPV(){
+    const body=$('pvBody');
+    let h='<div class="pv-cats">';
+    for(const[cat,prompts]of Object.entries(PV_PROMPTS)){
+        h+='<div class="pv-cat"><div class="pv-cat-title">'+cat+'</div>';
+        if(!prompts.length){h+='<div class="pv-empty">Nessun prompt</div>'}
+        prompts.forEach((p,i)=>{
+            h+='<div class="pv-card" onclick="copyPVPrompt(\''+cat+'\','+i+',this)" title="'+p.desc+'"><span class="pv-card-name">'+p.name+'</span><span class="pv-card-copy">Copia</span></div>';
+        });
+        h+='</div>';
+    }
+    h+='</div>';
+    body.innerHTML=h;
+}
+function copyPVPrompt(cat,idx,el){
+    const p=PV_PROMPTS[cat][idx];if(!p)return;
+    const now=new Date().toLocaleString('it-IT',{timeZone:'Europe/Rome',weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    const text=p.prompt.replace('{ORA_ITALIA}',now);
+    navigator.clipboard.writeText(text).then(()=>{
+        el.classList.add('copied');el.querySelector('.pv-card-copy').textContent='Copiato!';
+        setTimeout(()=>{el.classList.remove('copied');el.querySelector('.pv-card-copy').textContent='Copia'},1500);
+    }).catch(()=>{
+        const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    });
+}
 function bvTab(tab){
     bvMode=tab;lsSet('agenda_bvtab',tab);
     document.querySelectorAll('.bv-tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));

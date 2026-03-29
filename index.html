@@ -1791,6 +1791,7 @@ function startDrag(e,id,srcEl){
     const offX=e.clientX-srcRect.left;
     const offY=e.clientY-srcRect.top;
     const evSlots=Math.max(1,Math.round((ev.duration||30)/SM));
+    const evRealH=Math.max(15,ev.duration||30)/SM*SH;
 
     function onMove(e2){
         if(!didDrag&&Math.abs(e2.clientX-startX)<5&&Math.abs(e2.clientY-startY)<5)return;
@@ -1820,7 +1821,7 @@ function startDrag(e,id,srcEl){
                 ghost.style.left=(e2.clientX-offX)+'px';
                 ghost.style.top=(e2.clientY-offY)+'px';
                 ghost.style.width=srcRect.width+'px';
-                ghost.style.height=(evSlots*SH-2)+'px';
+                ghost.style.height=(evRealH-2)+'px';
                 return;
             }
         }
@@ -1837,7 +1838,7 @@ function startDrag(e,id,srcEl){
             ghost.style.left=(e2.clientX-offX)+'px';
             ghost.style.top=(e2.clientY-offY)+'px';
             ghost.style.width=srcRect.width+'px';
-            ghost.style.height=(evSlots*SH-2)+'px';
+            ghost.style.height=(evRealH-2)+'px';
             return;
         }
 
@@ -1864,13 +1865,13 @@ function startDrag(e,id,srcEl){
         ghost.style.left=(colR.left+2)+'px';
         ghost.style.width=(colR.width-4)+'px';
         ghost.style.top=slotScreenY+'px';
-        ghost.style.height=(evSlots*SH-2)+'px';
+        ghost.style.height=(evRealH-2)+'px';
 
         // Preview outline in column
         preview=document.createElement('div');
         preview.className='ev snap-preview c-'+ev.cat;
         preview.style.top=snapPx+'px';
-        preview.style.height=(evSlots*SH-2)+'px';
+        preview.style.height=(evRealH-2)+'px';
         preview.innerHTML=`<span class="ev-n">${esc(snapTime)}</span>`;
         targetCol.appendChild(preview);
         dragState={target:'grid',date:targetCol.dataset.date,time:snapTime};
@@ -3350,6 +3351,7 @@ function initTouchDrag(){
         const gbEl=$('gb');if(!gbEl)return;
         const gbR=gbEl.getBoundingClientRect();
         const evSlots=Math.max(1,Math.round((dragEv.duration||30)/SM));
+        const evRealH=Math.max(15,dragEv.duration||30)/SM*SH;
         const cardTopInGrid=t.clientY-offY-gbR.top-8;
         const snapSlot=Math.max(0,Math.min(SLOTS-evSlots,Math.round(cardTopInGrid/SH)));
 
@@ -3359,7 +3361,7 @@ function initTouchDrag(){
             ghostEl.style.left=(colR.left+2)+'px';
             ghostEl.style.width=(colR.width-4)+'px';
             ghostEl.style.top=(gbR.top+8+snapSlot*SH)+'px';
-            ghostEl.style.height=(evSlots*SH-2)+'px';
+            ghostEl.style.height=(evRealH-2)+'px';
         } else {
             ghostEl.style.left=(t.clientX-offX)+'px';
             ghostEl.style.top=(t.clientY-offY)+'px';
@@ -3371,7 +3373,7 @@ function initTouchDrag(){
             preview=document.createElement('div');
             preview.className='ev snap-preview c-'+dragEv.cat;
             preview.style.top=(snapSlot*SH)+'px';
-            preview.style.height=(evSlots*SH-2)+'px';
+            preview.style.height=(evRealH-2)+'px';
             preview.innerHTML='<span class="ev-n">'+esc(s2t(snapSlot))+'</span>';
             targetCol.appendChild(preview);
             dragState={target:'grid',date:targetCol.dataset.date,time:s2t(snapSlot)};

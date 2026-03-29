@@ -2558,15 +2558,22 @@ I valori sono stringhe JSON (fai JSON.parse del risultato).
 
 REGOLE DI LINGUAGGIO: Usa un linguaggio naturale, discorsivo e da "Chief of Staff". NON inserire mai nell'output metadati tecnici, codici o diciture grezze come "status: todo" o tag di sistema. Rendi la lettura pulita e umana.
 
-Fatta questa premessa, ho bisogno del mio "Briefing Mattutino". Analizza i dati della mia Agenda (Calendario di oggi, Backlog, In Attesa, Progetti Attivi) e strutturami la risposta in questo modo:
+REGOLA DI CONCISIONE: Se una sezione (In Attesa, Progetti, Inbox, Tickler, Someday) e vuota, NON dedicarle spazio. Al massimo una riga tipo "Niente in attesa." e vai avanti. Concentrati su quello che C'E, non su quello che manca. Nessuno sguardo a domani o ai giorni successivi — solo OGGI.
 
-1. Il Terreno Sacro (Appuntamenti Fissi): Elencami le scadenze e gli eventi a orario di oggi, basandoti solo su cio che ha una data/ora odierna.
+Fatta questa premessa, ho bisogno del mio "Briefing Mattutino". Struttura la risposta ESATTAMENTE cosi:
 
-2. Il Dossier Operativo: Per ogni appuntamento o task prioritario di oggi, cerca nel mio sistema eventuali note, email salvate, subtask o deleghe "In Attesa" legate a quella persona o a quel progetto. Forniscimi un promemoria strategico unendo questi puntini, ma usa solo i dati e le note realmente scritti nel sistema. Non inventare consigli generici.
+1. La Scaletta (solo lista pulita):
+Prima di tutto mostrami SOLO la lista delle attivita di oggi con orario e durata, senza commenti, senza approfondimenti. Una riga per attivita. Esempio:
+- 09:00 (60 min) — Nome task
+- 10:00 (30 min) — Nome task
 
-3. I 3 Bersagli del Backlog: Scegli per me 3 task dal Backlog (una veloce <= 2 min, una a bassa energia, una di deep work). Mostramele cosi come sono scritte e dimmi a quale eventuale materiale di riferimento reale devo appoggiarmi per farle.
+2. Il Dossier (approfondimento per attivita):
+Sotto la lista, per ogni attivita di oggi, apri un breve paragrafo con le note, subtask o deleghe "In Attesa" collegate che trovi nel sistema. Usa solo dati realmente scritti. Se una attivita non ha note ne collegamenti, scrivi solo il nome e vai avanti.
 
-Dichiara la data che stai utilizzando in cima alla risposta (es: "Briefing per il [Data di oggi]").`;
+3. I 3 Bersagli del Backlog (se ci sono task nel Backlog):
+Scegli 3 task dal Backlog (una veloce <= 2 min, una a bassa energia, una di deep work). Mostramele cosi come sono scritte e dimmi a quale eventuale materiale di riferimento reale devo appoggiarmi per farle. Se il Backlog e vuoto, salta questa sezione.
+
+Dichiara la data in cima alla risposta (es: "Briefing per il [Data di oggi]").`;
 
 AI_PROMPTS.recupero=`Agisci come il mio Segretario GTD e assistente al recupero. Leggi la tua data di sistema per sapere che giorno e oggi.
 

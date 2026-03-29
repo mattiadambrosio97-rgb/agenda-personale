@@ -976,6 +976,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
                 <button class="backup-btn" onclick="copyAIPrompt('briefing')">☀️ Briefing Mattutino</button>
                 <button class="backup-btn" onclick="copyAIPrompt('recap')">📋 Recap Esecutivo</button>
                 <button class="backup-btn" onclick="copyAIPrompt('recupero')">🔄 Recupero Arretrati</button>
+                <button class="backup-btn" onclick="copyAIPrompt('wrapup')">🧠 Wrap Up Sessione</button>
                 <div class="qi-hint">Clicca per copiare, poi incolla su Claude Code.</div>
             </div>
         </div>
@@ -2678,6 +2679,33 @@ Step 4: Attesa e Azione
 Fermati e aspetta le mie istruzioni. Dopo che ti avro detto cosa fare (es. "Spostala a domani alle 10", "Mettila nel Backlog", "Cestinala"), confermami di aver eseguito l'operazione. Dopodiche, passa automaticamente alla seconda task dell'elenco iniziale, ripetendo gli Step 3 e 4. Non farmi andare avanti e non farmi domande sulle task successive finche non ho preso una decisione ferma su quella che stiamo esaminando.
 
 Hai capito? Se si, scansiona l'agenda, fammi la panoramica e presentami subito il problema numero 1!`;
+
+AI_PROMPTS.wrapup=`WRAP UP DI SESSIONE — Analisi e apprendimento
+
+Rileggi TUTTA la conversazione che abbiamo avuto in questa sessione, dall'inizio alla fine. Il tuo obiettivo e estrarre tutto cio che vale la pena ricordare per le sessioni future e salvarlo nella tua memoria persistente.
+
+Analizza questi 5 livelli:
+
+1. CHI SONO (preferenze, abitudini, stile)
+Cosa hai imparato su di me come persona? Gusti, abitudini quotidiane (palestra, orari, routine), modo di lavorare, come prendo decisioni, cosa mi irrita, cosa apprezzo. Se ho menzionato attivita ricorrenti (sport, hobby, impegni fissi), annotale — potrebbero servire per la pianificazione dell'agenda.
+
+2. COME LAVORO (pattern operativi)
+Come ho affrontato i problemi in questa sessione? Sono stato metodico o caotico? Ho cambiato idea spesso? Ho delegato o voluto controllare tutto? Quali tool/processi ho usato o menzionato? Salva i pattern che possono aiutarti a lavorare meglio con me in futuro.
+
+3. COSA HO DETTO DI FARE (task, impegni, decisioni)
+Ho preso impegni, menzionato scadenze, detto "devo fare X", "ricordami di Y"? Se si, verifica se sono gia nell'agenda. Se mancano, segnalameli esplicitamente cosi posso aggiungerli.
+
+4. FEEDBACK SUL TUO LAVORO (come migliorare)
+Ti ho corretto? Ho detto "no, non cosi"? Ho accettato qualcosa di non ovvio senza obiettare? Salva sia le correzioni che le conferme — entrambe sono preziose per calibrarti.
+
+5. DOVE POSSO MIGLIORARE (coaching gentile)
+Basandoti su quello che hai osservato nella sessione, c'e qualcosa che potrei fare meglio? Procrastinazione, disorganizzazione, decisioni rimandate, task che si accumulano? Dimmelo in modo diretto ma costruttivo, come farebbe un buon Chief of Staff.
+
+FORMATO OUTPUT:
+- Per ogni punto, scrivi cosa hai trovato e cosa stai salvando in memoria
+- Se non c'e nulla di rilevante per un livello, saltalo
+- Alla fine, elenca le eventuali task/impegni da aggiungere all'agenda
+- Usa linguaggio naturale, zero metadati tecnici`;
 
 function copyAIPrompt(key){
     let text=AI_PROMPTS[key];if(!text)return;

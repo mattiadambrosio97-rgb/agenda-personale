@@ -136,9 +136,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 .ev.c-polpettina .ev-c{background:var(--pink);color:#fff}
 .ev.c-tenuta .ev-c{background:var(--azzurro);color:#fff}
 /* Small cards: only title */
+.ev.mini{flex-direction:row;align-items:center;gap:4px;padding:1px 6px}
 .ev.mini .ev-t{display:none}
-.ev.mini .ev-n{font-size:10px;-webkit-line-clamp:2}
-.ev.mini .ev-c{font-size:7px;padding:0 4px;margin-top:0}
+.ev.mini .ev-n{font-size:10px;-webkit-line-clamp:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.ev.mini .ev-c{font-size:7px;padding:0 4px;margin-top:0;flex-shrink:0}
+.ev.mini .ev-sub{display:none}
+.ev.mini .rz-top{display:none}
 /* Status */
 .ev-st{width:7px;height:7px;border-radius:50%;flex-shrink:0;position:absolute;top:4px;right:5px}
 .st-doing{background:var(--blue);animation:pulse 1.8s ease infinite}

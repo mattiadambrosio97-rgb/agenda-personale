@@ -1766,11 +1766,11 @@ function togSubDay(evId,subIdx){
 let dragState=null,didDrag=false,ghost=null,preview=null;
 let dragScrollRAF=null,dragLastMouseY=0;
 function dragAutoScroll(){
-    const gb=$('gb');if(!gb||!didDrag){dragScrollRAF=null;return}
-    const r=gb.getBoundingClientRect();
+    const gs=$('gs');if(!gs||!didDrag){dragScrollRAF=null;return}
+    const r=gs.getBoundingClientRect();
     const edge=60,speed=12;
-    if(dragLastMouseY>r.bottom-edge){gb.scrollTop+=speed}
-    else if(dragLastMouseY<r.top+edge){gb.scrollTop-=speed}
+    if(dragLastMouseY>r.bottom-edge){gs.scrollTop+=speed}
+    else if(dragLastMouseY<r.top+edge){gs.scrollTop-=speed}
     dragScrollRAF=requestAnimationFrame(dragAutoScroll);
 }
 

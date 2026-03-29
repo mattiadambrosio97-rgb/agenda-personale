@@ -952,7 +952,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
         </div>
         <button class="ib" onclick="togSearch()" title="Ricerca globale (/)">🔍</button>
         <button class="ab" onclick="openMod()" title="Solo azioni già chiarite. Per idee grezze usa 💡">+ Nuovo</button>
-        <button class="ib" onclick="copyAIRecap(this)" title="Copia prompt AI Recap" style="font-size:11px;font-weight:800;letter-spacing:-.3px">AI</button>
+        <div class="qi-wrap">
+            <button class="ib" onclick="togAIMenu()" title="Prompt AI" style="font-size:11px;font-weight:800;letter-spacing:-.3px">AI</button>
+            <div class="qi-pop" id="aiPop">
+                <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">Prompt AI</div>
+                <button class="backup-btn" onclick="copyAIPrompt('recap')">📋 Recap Esecutivo</button>
+                <div class="qi-hint">Clicca per copiare, poi incolla su Claude Code.</div>
+            </div>
+        </div>
         <div class="qi-wrap">
             <button class="ib" onclick="togBackupMenu()" title="Backup & Ripristino" style="font-size:14px">💾</button>
             <div class="qi-pop" id="backupPop">
@@ -994,7 +1001,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
         <div class="mm-item" onclick="startReview();closeMobileMore()"><span class="mm-icon">📊</span><span class="mm-label">Review</span></div>
         <div class="mm-item" onclick="startFocus();closeMobileMore()"><span class="mm-icon">🎯</span><span class="mm-label">Focus</span></div>
         <div class="mm-item" onclick="togDark();closeMobileMore()"><span class="mm-icon">🌙</span><span class="mm-label">Dark</span></div>
-        <div class="mm-item" onclick="copyAIRecap();closeMobileMore()"><span class="mm-icon">🤖</span><span class="mm-label">AI Recap</span></div>
+        <div class="mm-item" onclick="copyAIPrompt('recap');closeMobileMore()"><span class="mm-icon">🤖</span><span class="mm-label">AI Recap</span></div>
         <div class="mm-item" onclick="exportBackup();closeMobileMore()"><span class="mm-icon">📥</span><span class="mm-label">Backup</span></div>
         <div class="mm-item" onclick="$('importFile').click();closeMobileMore()"><span class="mm-icon">📤</span><span class="mm-label">Importa</span></div>
     </div>
@@ -2498,19 +2505,20 @@ function doSearch(q){
     window.searchResults=results.slice(0,15).map(r=>r.action);
 }
 
-// AI RECAP — copia prompt (senza dati) con URL Firebase
-function copyAIRecap(btn){
-    const FB='https://agenda-f3298-default-rtdb.europe-west1.firebasedatabase.app/agenda';
-    const prompt=`Analizza i dati aggiornati della mia Agenda GTD. Per prima cosa, rileva la tua data di sistema attuale e usala come "Oggi". Usa questa data come punto zero per calcolare tutte le scadenze, gli avvisi e l'orizzonte della prossima settimana.
+// AI PROMPTS — popup + dizionario prompt
+function togAIMenu(){$('aiPop').classList.toggle('on')}
+const AI_PROMPTS={};
+const AI_FB='https://agenda-f3298-default-rtdb.europe-west1.firebasedatabase.app/agenda';
+AI_PROMPTS.recap=`Analizza i dati aggiornati della mia Agenda GTD. Per prima cosa, rileva la tua data di sistema attuale e usala come "Oggi". Usa questa data come punto zero per calcolare tutte le scadenze, gli avvisi e l'orizzonte della prossima settimana.
 
 STEP 0: RECUPERA I DATI
 Leggi i dati da Firebase con curl (esegui in parallelo):
-- Eventi/Task: ${FB}/agenda_events.json
-- Inbox: ${FB}/agenda_inbox.json
-- In Attesa (Deleghe): ${FB}/agenda_waiting.json
-- Progetti: ${FB}/agenda_projects.json
-- Scadenzario (Tickler): ${FB}/agenda_tickler.json
-- Someday/Maybe: ${FB}/agenda_someday.json
+- Eventi/Task: ${AI_FB}/agenda_events.json
+- Inbox: ${AI_FB}/agenda_inbox.json
+- In Attesa (Deleghe): ${AI_FB}/agenda_waiting.json
+- Progetti: ${AI_FB}/agenda_projects.json
+- Scadenzario (Tickler): ${AI_FB}/agenda_tickler.json
+- Someday/Maybe: ${AI_FB}/agenda_someday.json
 I valori sono stringhe JSON (fai JSON.parse del risultato).
 
 Poi forniscimi un Recap Esecutivo strutturato in queste due macro-aree:
@@ -2530,11 +2538,14 @@ PARTE 2: RADAR SETTIMANALE E ANALISI (Prossimi 7 giorni)
 3. Status Deleghe: C'è qualcuno che dobbiamo sollecitare nei prossimi giorni per la lista "In Attesa"?
 
 Dichiara la data che stai utilizzando in cima alla risposta (es: "Recap per il [Data di oggi]").`;
-    navigator.clipboard.writeText(prompt).then(()=>{
-        if(btn){const orig=btn.innerHTML;btn.innerHTML='<span style="color:var(--green)">OK</span>';setTimeout(()=>btn.innerHTML=orig,1500)}
+
+function copyAIPrompt(key){
+    const text=AI_PROMPTS[key];if(!text)return;
+    const pop=$('aiPop');
+    navigator.clipboard.writeText(text).then(()=>{
+        pop.querySelectorAll('.backup-btn').forEach(b=>{if(b.onclick.toString().includes(key)){const orig=b.textContent;b.textContent='Copiato!';b.style.borderColor='var(--green)';b.style.color='var(--green)';setTimeout(()=>{b.textContent=orig;b.style.borderColor='';b.style.color=''},1500)}});
     }).catch(()=>{
-        const ta=document.createElement('textarea');ta.value=prompt;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
-        if(btn){const orig=btn.innerHTML;btn.innerHTML='<span style="color:var(--green)">OK</span>';setTimeout(()=>btn.innerHTML=orig,1500)}
+        const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
     });
 }
 

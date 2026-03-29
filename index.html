@@ -126,7 +126,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 .ev.snap-preview{position:absolute;opacity:.4;pointer-events:none;border:1px dashed currentColor;background:none!important}
 .ev-t{font-size:9px;font-weight:600;opacity:.5;line-height:1}
 .ev-n{font-size:11px;font-weight:700;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word;flex:1}
-.ev-c{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-top:auto;line-height:1;padding:2px 6px;border-radius:3px;align-self:flex-start}
+.ev-c{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-top:auto;line-height:1;padding:2px 6px;border-radius:3px;align-self:flex-end}
 .ev.c-adt .ev-c,.ev.c-usr .ev-c{background:var(--red);color:#fff}
 .ev.c-amgroup .ev-c{background:var(--yellow);color:#000}
 .ev.c-camp .ev-c,.ev.c-undic1 .ev-c,.ev.c-revivagolf .ev-c{background:var(--green);color:#fff}
@@ -1764,6 +1764,15 @@ function togSubDay(evId,subIdx){
 
 // Custom magnetic drag
 let dragState=null,didDrag=false,ghost=null,preview=null;
+let dragScrollRAF=null,dragLastMouseY=0;
+function dragAutoScroll(){
+    const gb=$('gb');if(!gb||!didDrag){dragScrollRAF=null;return}
+    const r=gb.getBoundingClientRect();
+    const edge=60,speed=12;
+    if(dragLastMouseY>r.bottom-edge){gb.scrollTop+=speed}
+    else if(dragLastMouseY<r.top+edge){gb.scrollTop-=speed}
+    dragScrollRAF=requestAnimationFrame(dragAutoScroll);
+}
 
 function startDrag(e,id,srcEl){
     e.preventDefault();
@@ -1784,8 +1793,10 @@ function startDrag(e,id,srcEl){
             ghost.className='ev ghost c-'+ev.cat;
             ghost.innerHTML=`<span class="ev-n">${esc(ev.title)}</span>`;
             document.body.appendChild(ghost);
+            dragScrollRAF=requestAnimationFrame(dragAutoScroll);
         }
 
+        dragLastMouseY=e2.clientY;
         clearPreview();
         $('blList').classList.remove('drag-hi');
         dragState=null;
@@ -1857,6 +1868,7 @@ function startDrag(e,id,srcEl){
     function onUp(){
         document.removeEventListener('mousemove',onMove);
         document.removeEventListener('mouseup',onUp);
+        if(dragScrollRAF){cancelAnimationFrame(dragScrollRAF);dragScrollRAF=null}
         srcEl.classList.remove('dragging');
         if(ghost){ghost.remove();ghost=null}
         clearPreview();
@@ -1884,6 +1896,8 @@ function clearPreview(){if(preview){preview.remove();preview=null}}
 // Resize
 function onRz(e){
     if(!rzD)return;
+    dragLastMouseY=e.clientY;
+    if(!dragScrollRAF){dragScrollRAF=requestAnimationFrame(dragAutoScroll)}
     const dy=e.clientY-rzD.y0;
     if(rzD.dir==='bottom'){
         const nh=rzD.h0+dy,sl=Math.max(1,Math.round(nh/SH));
@@ -1902,6 +1916,7 @@ function onRz(e){
     }
 }
 function endRz(){
+    if(dragScrollRAF){cancelAnimationFrame(dragScrollRAF);dragScrollRAF=null}
     document.removeEventListener('mousemove',onRz);document.removeEventListener('mouseup',endRz);
     if(rzD&&(rzD._dur||rzD._newStart)){
         const ev=evs.find(x=>x.id===rzD.id);

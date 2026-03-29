@@ -956,6 +956,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
             <button class="ib" onclick="togAIMenu()" title="Prompt AI" style="font-size:11px;font-weight:800;letter-spacing:-.3px">AI</button>
             <div class="qi-pop" id="aiPop">
                 <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">Prompt AI</div>
+                <button class="backup-btn" onclick="copyAIPrompt('briefing')">☀️ Briefing Mattutino</button>
                 <button class="backup-btn" onclick="copyAIPrompt('recap')">📋 Recap Esecutivo</button>
                 <button class="backup-btn" onclick="copyAIPrompt('recupero')">🔄 Recupero Arretrati</button>
                 <div class="qi-hint">Clicca per copiare, poi incolla su Claude Code.</div>
@@ -2540,7 +2541,33 @@ PARTE 2: RADAR SETTIMANALE E ANALISI (Prossimi 7 giorni)
 
 Dichiara la data che stai utilizzando in cima alla risposta (es: "Recap per il [Data di oggi]").`;
 
-AI_PROMPTS.recupero=`Agisci come il mio Segretario GTD e assistente al recupero. Leggi la tua data di sistema per sapere che giorno è oggi.
+AI_PROMPTS.briefing=`REGOLA ZERO (VINCOLO DI REALTA): Il mio sistema GTD si basa sulla fiducia assoluta. E severamente vietato allucinare, inventare, presumere o dedurre task, appuntamenti, scadenze, nomi o note che non siano ESPLICITAMENTE presenti nei dati che ti fornisco. Devi basarti ESCLUSIVAMENTE sulle informazioni documentate nella mia agenda. Se un'informazione o un collegamento manca, NON inventarlo.
+
+Agisci come il mio Chief of Staff. Leggi la tua data di sistema per sapere che giorno e oggi.
+
+STEP 0: RECUPERA I DATI
+Leggi i dati da Firebase con curl (esegui in parallelo):
+- Eventi/Task: ${AI_FB}/agenda_events.json
+- Inbox: ${AI_FB}/agenda_inbox.json
+- In Attesa (Deleghe): ${AI_FB}/agenda_waiting.json
+- Progetti: ${AI_FB}/agenda_projects.json
+- Scadenzario (Tickler): ${AI_FB}/agenda_tickler.json
+- Someday/Maybe: ${AI_FB}/agenda_someday.json
+I valori sono stringhe JSON (fai JSON.parse del risultato).
+
+REGOLE DI LINGUAGGIO: Usa un linguaggio naturale, discorsivo e da "Chief of Staff". NON inserire mai nell'output metadati tecnici, codici o diciture grezze come "status: todo" o tag di sistema. Rendi la lettura pulita e umana.
+
+Fatta questa premessa, ho bisogno del mio "Briefing Mattutino". Analizza i dati della mia Agenda (Calendario di oggi, Backlog, In Attesa, Progetti Attivi) e strutturami la risposta in questo modo:
+
+1. Il Terreno Sacro (Appuntamenti Fissi): Elencami le scadenze e gli eventi a orario di oggi, basandoti solo su cio che ha una data/ora odierna.
+
+2. Il Dossier Operativo: Per ogni appuntamento o task prioritario di oggi, cerca nel mio sistema eventuali note, email salvate, subtask o deleghe "In Attesa" legate a quella persona o a quel progetto. Forniscimi un promemoria strategico unendo questi puntini, ma usa solo i dati e le note realmente scritti nel sistema. Non inventare consigli generici.
+
+3. I 3 Bersagli del Backlog: Scegli per me 3 task dal Backlog (una veloce <= 2 min, una a bassa energia, una di deep work). Mostramele cosi come sono scritte e dimmi a quale eventuale materiale di riferimento reale devo appoggiarmi per farle.
+
+Dichiara la data che stai utilizzando in cima alla risposta (es: "Briefing per il [Data di oggi]").`;
+
+AI_PROMPTS.recupero=`Agisci come il mio Segretario GTD e assistente al recupero. Leggi la tua data di sistema per sapere che giorno e oggi.
 
 STEP 0: RECUPERA I DATI
 Leggi i dati da Firebase con curl (esegui in parallelo):
@@ -2553,11 +2580,12 @@ Leggi i dati da Firebase con curl (esegui in parallelo):
 I valori sono stringhe JSON (fai JSON.parse del risultato).
 
 SITUAZIONE: Voglio fare un "Recupero Arretrati". Ho bisogno che tu analizzi i giorni scorsi e mi aiuti a riprogrammare le task che mi sono dimenticato di fare o che ho lasciato indietro.
+REGOLE DI LINGUAGGIO: Usa un linguaggio naturale, discorsivo e da "Chief of Staff". NON inserire mai nell'output metadati tecnici, codici o diciture grezze come "status: todo" o tag di sistema. Rendi la lettura pulita e umana.
 
 Segui esattamente questa procedura interattiva:
 
 Step 1: Scansione
-Analizza la mia Agenda (Calendario e Backlog) e individua tutte le task di ieri (o più vecchie) che non risultano spuntate come "Fatte".
+Analizza la mia Agenda (Calendario e Backlog) e individua tutte le task di ieri (o piu vecchie), o di oggi gia scadute, che non risultano spuntate come "Fatte".
 
 Step 2: Panoramica e Isolamento (LA REGOLA D'ORO)
 Mostrami un rapido e semplice elenco puntato di tutte le task arretrate, solo per farmi capire il volume di lavoro complessivo. SUBITO DOPO l'elenco, isola rigorosamente solo la prima task dell'elenco e obbligami a concentrarmi su di essa, ignorando momentaneamente le altre.
@@ -2566,9 +2594,9 @@ Step 3: Analisi degli Slot e Proposta (Solo per la task in esame)
 Per quella specifica task isolata, incrocia la sua durata stimata e la sua energia richiesta con il mio calendario di oggi e dei prossimi 2 giorni. Dimmi testualmente: "Iniziamo dalla prima: [Nome Task]. Dati i tuoi impegni, potresti infilarla in questi spazi liberi: [Opzione 1] o [Opzione 2]. Altrimenti, possiamo toglierle la data e rimetterla nel Backlog fluido. Cosa decidi?"
 
 Step 4: Attesa e Azione
-Fermati e aspetta le mie istruzioni. Dopo che ti avrò detto cosa fare (es. "Spostala a domani alle 10", "Mettila nel Backlog", "Cestinala"), confermami di aver eseguito l'operazione. Dopodiché, passa automaticamente alla seconda task dell'elenco iniziale, ripetendo gli Step 3 e 4. Non farmi andare avanti e non farmi domande sulle task successive finché non ho preso una decisione ferma su quella che stiamo esaminando.
+Fermati e aspetta le mie istruzioni. Dopo che ti avro detto cosa fare (es. "Spostala a domani alle 10", "Mettila nel Backlog", "Cestinala"), confermami di aver eseguito l'operazione. Dopodiche, passa automaticamente alla seconda task dell'elenco iniziale, ripetendo gli Step 3 e 4. Non farmi andare avanti e non farmi domande sulle task successive finche non ho preso una decisione ferma su quella che stiamo esaminando.
 
-Hai capito? Se sì, scansiona l'agenda, fammi la panoramica e presentami subito il problema numero 1!`;
+Hai capito? Se si, scansiona l'agenda, fammi la panoramica e presentami subito il problema numero 1!`;
 
 function copyAIPrompt(key){
     const text=AI_PROMPTS[key];if(!text)return;

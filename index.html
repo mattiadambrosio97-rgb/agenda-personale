@@ -157,6 +157,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 .ev.tall .ev-n{-webkit-line-clamp:4}
 .ev .rz{position:absolute;bottom:0;left:0;right:0;height:6px;cursor:ns-resize}
 .ev .rz:hover{background:linear-gradient(0deg,rgba(0,0,0,.08),transparent)}
+.ev .rz-top{position:absolute;top:0;left:0;right:0;height:6px;cursor:ns-resize;border-radius:inherit;border-bottom-left-radius:0;border-bottom-right-radius:0}
+.ev .rz-top:hover{background:linear-gradient(180deg,rgba(0,0,0,.08),transparent)}
 .ev-btns{position:absolute;bottom:3px;right:4px;display:flex;gap:8px;opacity:0;transition:opacity .12s}
 .ev:hover .ev-btns{opacity:1}
 .ev.s-done .ev-btns{opacity:.6}
@@ -1479,12 +1481,12 @@ function rGrid(){
             const chkMark=st==='done'?'&#10003;':'';
             const subs=ev.subs||[];const subDone=subs.filter(s=>s.done).length;const subTot=subs.length;
             const subHtml=subTot?`<span class="ev-sub"><span class="ev-sub-bar"><span class="ev-sub-fill" style="width:${subTot?subDone/subTot*100:0}%"></span></span>${subDone}/${subTot}</span>`:'';
-            card.innerHTML=`${stDot}<span class="ev-t">${ev.startTime} – ${endT}</span><span class="ev-n">${esc(ev.title)}</span><span class="ev-c">${CL[ev.cat]||ev.cat}</span>${subHtml}<div class="ev-btns"><button class="ev-del" data-id="${ev.id}">&times;</button><button class="ev-chk" data-id="${ev.id}">&#10003;</button></div><div class="rz"></div>`;
-            card.addEventListener('mousedown',e=>{if(e.target.classList.contains('rz')||e.target.classList.contains('ev-chk')||e.target.classList.contains('ev-del')||e.button!==0)return;startDrag(e,ev.id,card)});
+            card.innerHTML=`<div class="rz-top"></div>${stDot}<span class="ev-t">${ev.startTime} – ${endT}</span><span class="ev-n">${esc(ev.title)}</span><span class="ev-c">${CL[ev.cat]||ev.cat}</span>${subHtml}<div class="ev-btns"><button class="ev-del" data-id="${ev.id}">&times;</button><button class="ev-chk" data-id="${ev.id}">&#10003;</button></div><div class="rz"></div>`;
+            card.addEventListener('mousedown',e=>{if(e.target.classList.contains('rz')||e.target.classList.contains('rz-top')||e.target.classList.contains('ev-chk')||e.target.classList.contains('ev-del')||e.button!==0)return;startDrag(e,ev.id,card)});
             card.addEventListener('click',e=>{
                 if(e.target.classList.contains('ev-del')){e.stopPropagation();quickDel(ev.id);return}
                 if(e.target.classList.contains('ev-chk')){e.stopPropagation();toggleDone(ev.id);return}
-                if(e.target.classList.contains('rz')||didDrag)return;
+                if(e.target.classList.contains('rz')||e.target.classList.contains('rz-top')||didDrag)return;
                 if(e.ctrlKey||e.metaKey){e.stopPropagation();toggleSel(ev.id);return}
                 if(selected.size>0){toggleSel(ev.id);return}
                 if(isOverdue){showTriage(ev.id,e);return}
@@ -1492,7 +1494,12 @@ function rGrid(){
             });
             card.querySelector('.rz').addEventListener('mousedown',e=>{
                 e.preventDefault();e.stopPropagation();
-                rzD={id:ev.id,y0:e.clientY,dur0:ev.duration,h0:card.offsetHeight,card};
+                rzD={id:ev.id,y0:e.clientY,dur0:ev.duration,h0:card.offsetHeight,card,dir:'bottom'};
+                document.addEventListener('mousemove',onRz);document.addEventListener('mouseup',endRz);
+            });
+            card.querySelector('.rz-top').addEventListener('mousedown',e=>{
+                e.preventDefault();e.stopPropagation();
+                rzD={id:ev.id,y0:e.clientY,dur0:ev.duration,h0:card.offsetHeight,top0:card.offsetTop,card,dir:'top',startSlot:t2s(ev.startTime)};
                 document.addEventListener('mousemove',onRz);document.addEventListener('mouseup',endRz);
             });
             col.appendChild(card);
@@ -1874,8 +1881,45 @@ function startDrag(e,id,srcEl){
 function clearPreview(){if(preview){preview.remove();preview=null}}
 
 // Resize
-function onRz(e){if(!rzD)return;const dy=e.clientY-rzD.y0,nh=rzD.h0+dy,sl=Math.max(1,Math.round(nh/SH));rzD.card.style.height=(sl*SH-2)+'px';rzD._dur=sl*SM}
-function endRz(){document.removeEventListener('mousemove',onRz);document.removeEventListener('mouseup',endRz);if(rzD&&rzD._dur){const ev=evs.find(x=>x.id===rzD.id);if(ev){const conflict=checkOverlap(ev.date,ev.startTime,rzD._dur,ev.id);if(conflict){alert(`Resize bloccato: si sovrappone a "${conflict.title}" (${conflict.startTime})`);render()}else{ev.duration=rzD._dur;save();render()}}}rzD=null}
+function onRz(e){
+    if(!rzD)return;
+    const dy=e.clientY-rzD.y0;
+    if(rzD.dir==='bottom'){
+        const nh=rzD.h0+dy,sl=Math.max(1,Math.round(nh/SH));
+        rzD.card.style.height=(sl*SH-2)+'px';
+        rzD._dur=sl*SM;
+    } else {
+        // Top resize: move top up/down, adjust duration
+        const slotDelta=Math.round(dy/SH);
+        const newStartSlot=Math.max(0,rzD.startSlot+slotDelta);
+        const slotsGained=rzD.startSlot-newStartSlot;
+        const newSlots=Math.max(1,Math.round(rzD.dur0/SM)+slotsGained);
+        rzD.card.style.top=(newStartSlot*SH+2)+'px';
+        rzD.card.style.height=(newSlots*SH-6)+'px';
+        rzD._dur=newSlots*SM;
+        rzD._newStart=s2t(newStartSlot);
+    }
+}
+function endRz(){
+    document.removeEventListener('mousemove',onRz);document.removeEventListener('mouseup',endRz);
+    if(rzD&&(rzD._dur||rzD._newStart)){
+        const ev=evs.find(x=>x.id===rzD.id);
+        if(ev){
+            const newStart=rzD._newStart||ev.startTime;
+            const newDur=rzD._dur||ev.duration;
+            const conflict=checkOverlap(ev.date,newStart,newDur,ev.id);
+            if(conflict){
+                alert(`Resize bloccato: si sovrappone a "${conflict.title}" (${conflict.startTime})`);
+                render();
+            } else {
+                ev.startTime=newStart;
+                ev.duration=newDur;
+                save();render();
+            }
+        }
+    }
+    rzD=null;
+}
 
 // Now line
 function rNow(){document.querySelectorAll('.now').forEach(e=>e.remove());if(view==='month')return;const n=new Date(),h=n.getHours(),m=n.getMinutes();if(h<H0||h>=H1)return;const today=ds(tdy()),col=document.querySelector(`.dc[data-date="${today}"]`);if(!col)return;const px=((h-H0)*60+m)/SM*SH;const line=document.createElement('div');line.className='now';line.style.top=px+'px';col.appendChild(line)}

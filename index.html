@@ -957,6 +957,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
             <div class="qi-pop" id="aiPop">
                 <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">Prompt AI</div>
                 <button class="backup-btn" onclick="copyAIPrompt('recap')">📋 Recap Esecutivo</button>
+                <button class="backup-btn" onclick="copyAIPrompt('recupero')">🔄 Recupero Arretrati</button>
                 <div class="qi-hint">Clicca per copiare, poi incolla su Claude Code.</div>
             </div>
         </div>
@@ -2538,6 +2539,36 @@ PARTE 2: RADAR SETTIMANALE E ANALISI (Prossimi 7 giorni)
 3. Status Deleghe: C'è qualcuno che dobbiamo sollecitare nei prossimi giorni per la lista "In Attesa"?
 
 Dichiara la data che stai utilizzando in cima alla risposta (es: "Recap per il [Data di oggi]").`;
+
+AI_PROMPTS.recupero=`Agisci come il mio Segretario GTD e assistente al recupero. Leggi la tua data di sistema per sapere che giorno è oggi.
+
+STEP 0: RECUPERA I DATI
+Leggi i dati da Firebase con curl (esegui in parallelo):
+- Eventi/Task: ${AI_FB}/agenda_events.json
+- Inbox: ${AI_FB}/agenda_inbox.json
+- In Attesa (Deleghe): ${AI_FB}/agenda_waiting.json
+- Progetti: ${AI_FB}/agenda_projects.json
+- Scadenzario (Tickler): ${AI_FB}/agenda_tickler.json
+- Someday/Maybe: ${AI_FB}/agenda_someday.json
+I valori sono stringhe JSON (fai JSON.parse del risultato).
+
+SITUAZIONE: Voglio fare un "Recupero Arretrati". Ho bisogno che tu analizzi i giorni scorsi e mi aiuti a riprogrammare le task che mi sono dimenticato di fare o che ho lasciato indietro.
+
+Segui esattamente questa procedura interattiva:
+
+Step 1: Scansione
+Analizza la mia Agenda (Calendario e Backlog) e individua tutte le task di ieri (o più vecchie) che non risultano spuntate come "Fatte".
+
+Step 2: Panoramica e Isolamento (LA REGOLA D'ORO)
+Mostrami un rapido e semplice elenco puntato di tutte le task arretrate, solo per farmi capire il volume di lavoro complessivo. SUBITO DOPO l'elenco, isola rigorosamente solo la prima task dell'elenco e obbligami a concentrarmi su di essa, ignorando momentaneamente le altre.
+
+Step 3: Analisi degli Slot e Proposta (Solo per la task in esame)
+Per quella specifica task isolata, incrocia la sua durata stimata e la sua energia richiesta con il mio calendario di oggi e dei prossimi 2 giorni. Dimmi testualmente: "Iniziamo dalla prima: [Nome Task]. Dati i tuoi impegni, potresti infilarla in questi spazi liberi: [Opzione 1] o [Opzione 2]. Altrimenti, possiamo toglierle la data e rimetterla nel Backlog fluido. Cosa decidi?"
+
+Step 4: Attesa e Azione
+Fermati e aspetta le mie istruzioni. Dopo che ti avrò detto cosa fare (es. "Spostala a domani alle 10", "Mettila nel Backlog", "Cestinala"), confermami di aver eseguito l'operazione. Dopodiché, passa automaticamente alla seconda task dell'elenco iniziale, ripetendo gli Step 3 e 4. Non farmi andare avanti e non farmi domande sulle task successive finché non ho preso una decisione ferma su quella che stiamo esaminando.
+
+Hai capito? Se sì, scansiona l'agenda, fammi la panoramica e presentami subito il problema numero 1!`;
 
 function copyAIPrompt(key){
     const text=AI_PROMPTS[key];if(!text)return;

@@ -2498,23 +2498,22 @@ function doSearch(q){
     window.searchResults=results.slice(0,15).map(r=>r.action);
 }
 
-// AI RECAP — copia prompt + dati agenda negli appunti
+// AI RECAP — copia prompt (senza dati) con URL Firebase
 function copyAIRecap(btn){
-    const KEYS={agenda_events:'Eventi/Task',agenda_inbox:'Inbox',agenda_waiting:'In Attesa (Deleghe)',agenda_projects:'Progetti',agenda_tickler:'Scadenzario (Tickler)',agenda_someday:'Someday/Maybe'};
-    const today=new Date().toISOString().slice(0,10);
-    let dataBlock='';
-    for(const[k,label]of Object.entries(KEYS)){
-        const raw=localStorage.getItem(k);
-        if(!raw)continue;
-        try{
-            const arr=JSON.parse(raw);
-            if(!arr||!arr.length)continue;
-            dataBlock+='\n\n--- '+label.toUpperCase()+' ---\n'+JSON.stringify(arr,null,1);
-        }catch(e){}
-    }
+    const FB='https://agenda-f3298-default-rtdb.europe-west1.firebasedatabase.app/agenda';
     const prompt=`Analizza i dati aggiornati della mia Agenda GTD. Per prima cosa, rileva la tua data di sistema attuale e usala come "Oggi". Usa questa data come punto zero per calcolare tutte le scadenze, gli avvisi e l'orizzonte della prossima settimana.
 
-Forniscimi un Recap Esecutivo strutturato in queste due macro-aree:
+STEP 0: RECUPERA I DATI
+Leggi i dati da Firebase con curl (esegui in parallelo):
+- Eventi/Task: ${FB}/agenda_events.json
+- Inbox: ${FB}/agenda_inbox.json
+- In Attesa (Deleghe): ${FB}/agenda_waiting.json
+- Progetti: ${FB}/agenda_projects.json
+- Scadenzario (Tickler): ${FB}/agenda_tickler.json
+- Someday/Maybe: ${FB}/agenda_someday.json
+I valori sono stringhe JSON (fai JSON.parse del risultato).
+
+Poi forniscimi un Recap Esecutivo strutturato in queste due macro-aree:
 
 PARTE 1: FOCUS GIORNALIERO (Oggi)
 1. Il Terreno Sacro & Scadenzario: Elenca SOLO gli eventi a orario fisso di oggi e gli item dello Scadenzario (Tickler) che sono "scattati" oggi.
@@ -2530,9 +2529,7 @@ PARTE 2: RADAR SETTIMANALE E ANALISI (Prossimi 7 giorni)
 2. Allarmi Rossi sui Progetti: Scansiona i Progetti Attivi. Segnalami ESCLUSIVAMENTE i progetti che al momento NON hanno una "prossima azione" definita nel Backlog.
 3. Status Deleghe: C'è qualcuno che dobbiamo sollecitare nei prossimi giorni per la lista "In Attesa"?
 
-Dichiara la data che stai utilizzando in cima alla risposta (es: "Recap per il [Data di oggi]").
-
-=== DATI AGENDA (export ${today}) ===${dataBlock}`;
+Dichiara la data che stai utilizzando in cima alla risposta (es: "Recap per il [Data di oggi]").`;
     navigator.clipboard.writeText(prompt).then(()=>{
         if(btn){const orig=btn.innerHTML;btn.innerHTML='<span style="color:var(--green)">OK</span>';setTimeout(()=>btn.innerHTML=orig,1500)}
     }).catch(()=>{

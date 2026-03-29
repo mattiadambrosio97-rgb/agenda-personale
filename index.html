@@ -952,6 +952,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
         </div>
         <button class="ib" onclick="togSearch()" title="Ricerca globale (/)">🔍</button>
         <button class="ab" onclick="openMod()" title="Solo azioni già chiarite. Per idee grezze usa 💡">+ Nuovo</button>
+        <button class="ib" onclick="copyAIRecap(this)" title="Copia prompt AI Recap" style="font-size:11px;font-weight:800;letter-spacing:-.3px">AI</button>
         <div class="qi-wrap">
             <button class="ib" onclick="togBackupMenu()" title="Backup & Ripristino" style="font-size:14px">💾</button>
             <div class="qi-pop" id="backupPop">
@@ -993,6 +994,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
         <div class="mm-item" onclick="startReview();closeMobileMore()"><span class="mm-icon">📊</span><span class="mm-label">Review</span></div>
         <div class="mm-item" onclick="startFocus();closeMobileMore()"><span class="mm-icon">🎯</span><span class="mm-label">Focus</span></div>
         <div class="mm-item" onclick="togDark();closeMobileMore()"><span class="mm-icon">🌙</span><span class="mm-label">Dark</span></div>
+        <div class="mm-item" onclick="copyAIRecap();closeMobileMore()"><span class="mm-icon">🤖</span><span class="mm-label">AI Recap</span></div>
         <div class="mm-item" onclick="exportBackup();closeMobileMore()"><span class="mm-icon">📥</span><span class="mm-label">Backup</span></div>
         <div class="mm-item" onclick="$('importFile').click();closeMobileMore()"><span class="mm-icon">📤</span><span class="mm-label">Importa</span></div>
     </div>
@@ -2494,6 +2496,49 @@ function doSearch(q){
     if(!results.length){res.innerHTML='<div class="sr-empty">Nessun risultato per "'+q+'"</div>';return}
     res.innerHTML=results.slice(0,15).map((r,i)=>`<div class="sr-item" onclick="searchResults[${i}]()" tabindex="0"><span class="sr-tag ${r.tag}">${esc(r.label)}</span><span class="sr-title">${esc(r.title)}</span><span class="sr-meta">${esc(r.meta)}</span></div>`).join('');
     window.searchResults=results.slice(0,15).map(r=>r.action);
+}
+
+// AI RECAP — copia prompt + dati agenda negli appunti
+function copyAIRecap(btn){
+    const KEYS={agenda_events:'Eventi/Task',agenda_inbox:'Inbox',agenda_waiting:'In Attesa (Deleghe)',agenda_projects:'Progetti',agenda_tickler:'Scadenzario (Tickler)',agenda_someday:'Someday/Maybe'};
+    const today=new Date().toISOString().slice(0,10);
+    let dataBlock='';
+    for(const[k,label]of Object.entries(KEYS)){
+        const raw=localStorage.getItem(k);
+        if(!raw)continue;
+        try{
+            const arr=JSON.parse(raw);
+            if(!arr||!arr.length)continue;
+            dataBlock+='\n\n--- '+label.toUpperCase()+' ---\n'+JSON.stringify(arr,null,1);
+        }catch(e){}
+    }
+    const prompt=`Analizza i dati aggiornati della mia Agenda GTD. Per prima cosa, rileva la tua data di sistema attuale e usala come "Oggi". Usa questa data come punto zero per calcolare tutte le scadenze, gli avvisi e l'orizzonte della prossima settimana.
+
+Forniscimi un Recap Esecutivo strutturato in queste due macro-aree:
+
+PARTE 1: FOCUS GIORNALIERO (Oggi)
+1. Il Terreno Sacro & Scadenzario: Elenca SOLO gli eventi a orario fisso di oggi e gli item dello Scadenzario (Tickler) che sono "scattati" oggi.
+2. Scadenze Hard: Identifica qualsiasi task o progetto la cui data di scadenza tassativa è impostata per la giornata odierna.
+3. Triage dal Backlog: Analizza il mio Backlog e proponimi un piano d'attacco fluido:
+   - 2 task veloci (sotto i 15 min) o micro-azioni.
+   - 2 task a "Bassa Energia"
+   - 1 task strategica / Deep Work per far avanzare il progetto prioritario.
+4. Colli di bottiglia di oggi: Segnalami deleghe ("In Attesa") che sono scadute oggi o task di ieri rimaste incompiute (da rinegoziare o chiudere).
+
+PARTE 2: RADAR SETTIMANALE E ANALISI (Prossimi 7 giorni)
+1. Anticipazione Scadenze: Analizza le date dei prossimi 7 giorni. Segnalami quali eventi o scadenze importanti stanno arrivando e dimmi se ci sono task preparatorie che dovrei inserire nel Backlog oggi per non arrivare in ritardo.
+2. Allarmi Rossi sui Progetti: Scansiona i Progetti Attivi. Segnalami ESCLUSIVAMENTE i progetti che al momento NON hanno una "prossima azione" definita nel Backlog.
+3. Status Deleghe: C'è qualcuno che dobbiamo sollecitare nei prossimi giorni per la lista "In Attesa"?
+
+Dichiara la data che stai utilizzando in cima alla risposta (es: "Recap per il [Data di oggi]").
+
+=== DATI AGENDA (export ${today}) ===${dataBlock}`;
+    navigator.clipboard.writeText(prompt).then(()=>{
+        if(btn){const orig=btn.innerHTML;btn.innerHTML='<span style="color:var(--green)">OK</span>';setTimeout(()=>btn.innerHTML=orig,1500)}
+    }).catch(()=>{
+        const ta=document.createElement('textarea');ta.value=prompt;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+        if(btn){const orig=btn.innerHTML;btn.innerHTML='<span style="color:var(--green)">OK</span>';setTimeout(()=>btn.innerHTML=orig,1500)}
+    });
 }
 
 // BACKUP & RESTORE

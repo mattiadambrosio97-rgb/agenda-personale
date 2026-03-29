@@ -1914,10 +1914,11 @@ function onRz(e){
     const dy=e.clientY-rzD.y0;
     const pxPer15=SH/2; // 15 min = mezzo slot visivo
     if(rzD.dir==='bottom'){
-        const nh=rzD.h0+dy;
-        const units=Math.max(1,Math.round(nh/pxPer15));
-        rzD.card.style.height=(units*pxPer15-2)+'px';
-        rzD._dur=units*15;
+        const deltaUnits=Math.round(dy/pxPer15);
+        const origUnits=Math.round(rzD.dur0/15);
+        const newUnits=Math.max(1,origUnits+deltaUnits);
+        rzD.card.style.height=(newUnits*pxPer15-2)+'px';
+        rzD._dur=newUnits*15;
     } else {
         // Top resize: snap a 30 min (slot interi) per semplicita
         const slotDelta=Math.round(dy/SH);
